@@ -148,13 +148,21 @@ public class MarketingService {
         return executeWithObservability("full GTM strategy generation", request, () -> {
             Map<String, Object> fullStrategy = new HashMap<>();
 
+            // Capture the current request ID for use in async threads
+            String requestId = observability.getCurrentRequestId();
+
             // Pre-load all resources in parallel (will be cached)
             CompletableFuture<Void> resourcePreload = taskExecutor != null ? CompletableFuture.runAsync(() -> {
-                resourceProvider.getProduct(request.getProduct());
-                resourceProvider.getAudience(request.getAudience());
-                resourceProvider.getBrand(request.getBrandVoice());
-                if (request.getCompetitors() != null && !request.getCompetitors().isEmpty()) {
-                    resourceProvider.getCompetitors(request.getCompetitors());
+                observability.setRequestId(requestId); // Set request ID in async thread
+                try {
+                    resourceProvider.getProduct(request.getProduct());
+                    resourceProvider.getAudience(request.getAudience());
+                    resourceProvider.getBrand(request.getBrandVoice());
+                    if (request.getCompetitors() != null && !request.getCompetitors().isEmpty()) {
+                        resourceProvider.getCompetitors(request.getCompetitors());
+                    }
+                } finally {
+                    observability.clearRequestId();
                 }
             }, taskExecutor) : CompletableFuture.completedFuture(null);
 
@@ -162,6 +170,7 @@ public class MarketingService {
             Executor executor = taskExecutor != null ? taskExecutor : Runnable::run;
 
             CompletableFuture<Map<String, Object>> adsFuture = CompletableFuture.supplyAsync(() -> {
+                observability.setRequestId(requestId); // Set request ID in async thread
                 try {
                     log.info("Generating ads as part of full strategy for product: {}", request.getProduct());
                     log.info("Audience segment: {}", request.getAudience());
@@ -176,10 +185,13 @@ public class MarketingService {
                 } catch (Exception e) {
                     log.error("Error generating ads in full strategy", e);
                     return Map.of("error", "Failed to generate ads: " + e.getMessage());
+                } finally {
+                    observability.clearRequestId();
                 }
             }, executor);
 
             CompletableFuture<Map<String, Object>> crmFuture = CompletableFuture.supplyAsync(() -> {
+                observability.setRequestId(requestId); // Set request ID in async thread
                 try {
                     log.info("Generating CRM sequence as part of full strategy for product: {}", request.getProduct());
                     log.info("Audience segment: {}", request.getAudience());
@@ -194,10 +206,13 @@ public class MarketingService {
                 } catch (Exception e) {
                     log.error("Error generating CRM sequence in full strategy", e);
                     return Map.of("error", "Failed to generate CRM sequence: " + e.getMessage());
+                } finally {
+                    observability.clearRequestId();
                 }
             }, executor);
 
             CompletableFuture<Map<String, Object>> seoFuture = CompletableFuture.supplyAsync(() -> {
+                observability.setRequestId(requestId); // Set request ID in async thread
                 try {
                     log.info("Generating SEO strategy as part of full strategy for product: {}", request.getProduct());
                     log.info("Audience segment: {}", request.getAudience());
@@ -212,6 +227,8 @@ public class MarketingService {
                 } catch (Exception e) {
                     log.error("Error generating SEO strategy in full strategy", e);
                     return Map.of("error", "Failed to generate SEO strategy: " + e.getMessage());
+                } finally {
+                    observability.clearRequestId();
                 }
             }, executor);
 
