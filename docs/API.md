@@ -75,10 +75,17 @@ Generate automated email nurture sequences.
 **Request Body:**
 ```json
 {
-  "product": "SaaS Analytics Platform",
-  "audience": "B2B Data Scientists",
-  "brand_voice": "Professional, Data-Driven",
-  "goals": ["Increase Trial Signups", "Brand Awareness"]
+  "product": "AI-Powered CRM Suite",
+  "audience": "Sales Managers",
+  "brand_voice": "Friendly, Professional",
+  "goals": [
+    "Generate Qualified Leads",
+    "Increase Customer Engagement"
+  ],
+  "language": "en",
+  "competitors": "HubSpot, Salesforce",
+  "budget_range": "$3k-$6k",
+  "campaign_duration": "6 weeks"
 }
 ```
 
@@ -111,11 +118,18 @@ Generate comprehensive SEO strategy with keywords and tactics.
 **Request Body:**
 ```json
 {
-  "product": "SaaS Analytics Platform",
-  "audience": "B2B Data Scientists",
-  "brand_voice": "Professional, Data-Driven",
-  "goals": ["Organic Traffic Growth", "Lead Generation"],
-  "competitors": "Tableau, Power BI, Looker"
+  "product": "Cloud Project Management Tool",
+  "audience": "IT Project Managers",
+  "brand_voice": "Authoritative, Innovative",
+  "goals": [
+    "Organic Traffic Growth",
+    "Lead Generation",
+    "Thought Leadership"
+  ],
+  "language": "en",
+  "competitors": "Jira, Asana, Monday.com",
+  "budget_range": "$4k-$8k",
+  "campaign_duration": "Quarterly"
 }
 ```
 
@@ -149,13 +163,18 @@ Generate complete go-to-market strategy including ads, CRM, and SEO.
 **Request Body:**
 ```json
 {
-  "product": "SaaS Analytics Platform",
-  "audience": "B2B Data Scientists",
-  "brand_voice": "Professional, Data-Driven",
-  "goals": ["Increase Trial Signups", "Brand Awareness", "Organic Growth"],
-  "competitors": "Tableau, Power BI",
-  "budget_range": "$10000-$20000",
-  "campaign_duration": "6 months"
+  "product": "AI Growth Suite",
+  "audience": "SaaS Growth Teams",
+  "brand_voice": "Professional",
+  "goals": [
+    "Launch EU expansion",
+    "Increase SQLs 25%",
+    "Improve retention"
+  ],
+  "language": "en",
+  "competitors": "GrowthPilot, ScaleOps",
+  "budget_range": "$50k-$75k",
+  "campaign_duration": "Q1 2026"
 }
 ```
 
