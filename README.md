@@ -120,143 +120,74 @@ Once running, visit:
 
 ## API Endpoints
 
-### Health Check
-```
-GET /health
+For complete API documentation, see [API Reference](docs/API.md) or visit the Swagger UI at `http://localhost:8080/swagger-ui.html`
+
+### Quick Examples
+
+**Health Check**
+```bash
+curl http://localhost:8080/health
 ```
 
-### Marketing Operations
-
-#### Generate Ads
-```
-POST /api/marketing/ads
-Content-Type: application/json
-
-{
-  "product": "SaaS Analytics Platform",
-  "audience": "B2B Data Scientists",
-  "brand_voice": "Professional, Data-Driven",
-  "goals": ["Increase Trial Signups", "Brand Awareness"]
-}
+**Generate Ads**
+```bash
+curl -X POST http://localhost:8080/api/marketing/ads \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product": "SaaS Analytics Platform",
+    "audience": "B2B Data Scientists",
+    "brand_voice": "Professional, Data-Driven",
+    "goals": ["Increase Trial Signups"]
+  }'
 ```
 
-#### Generate CRM Sequences
-```
-POST /api/marketing/crm-sequences
-```
-
-#### Generate SEO Plan
-```
-POST /api/marketing/seo-plan
-```
-
-#### Generate Full Strategy
-```
-POST /api/marketing/strategy
-```
+**Other Endpoints**
+- `POST /api/marketing/crm-sequences` - Generate CRM sequences
+- `POST /api/marketing/seo-plan` - Generate SEO strategy
+- `POST /api/marketing/strategy` - Generate full GTM strategy
 
 ## Project Structure
 ```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/mcp/marketing/
-│   │       ├── McpMarketingApplication.java
-│   │       ├── config/          # Configuration classes
-│   │       ├── controller/      # REST controllers
-│   │       ├── service/         # Business logic
-│   │       ├── agent/           # AI agents
-│   │       ├── mcp/             # MCP server implementation
-│   │       ├── tool/            # Marketing tools
-│   │       ├── model/           # Domain models
-│   │       └── observability/   # Tracing and logging
-│   └── resources/
-│       ├── application.yml
-│       └── logback-spring.xml
-└── test/
-    └── java/
-        └── com/mcp/marketing/
+src/main/java/com/mcp/marketing/
+├── McpMarketingApplication.java    # Main application
+├── config/                         # Configuration
+├── controller/                     # REST endpoints
+├── service/                        # Business logic
+├── tool/                          # Marketing tools
+├── mcp/                           # MCP resources
+├── model/                         # Domain models
+└── observability/                 # Logging & tracing
 ```
+
+For detailed architecture, see [Architecture Guide](docs/ARCHITECTURE.md).
 
 ## Configuration
 
-Spring Boot automatically reads environment variables and applies them to `application.yml`. 
-
-### Available Environment Variables
+### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_API_KEY` | - | OpenAI API key (required for AI features) |
-| `LLM_MODEL` | `gpt-4` | LLM model to use |
-| `ENABLE_AI_AGENTS` | `true` | Enable/disable AI agent orchestration |
-| `OUTPUT_DIR` | `./outputs` | Directory for generated artifacts |
+| `OPENAI_API_KEY` | - | OpenAI API key (required for AI) |
+| `LLM_MODEL` | `gpt-4` | LLM model identifier |
+| `ENABLE_AI_AGENTS` | `true` | Enable/disable AI orchestration |
+| `OUTPUT_DIR` | `./outputs` | Output directory for artifacts |
 
-### Configuration File
-
-The `application.yml` uses Spring Boot's standard property placeholder syntax:
-
-```yaml
-mcp:
-  marketing:
-    llm:
-      provider: openai
-      api-key: ${OPENAI_API_KEY:}  # Reads from environment variable
-      model: ${LLM_MODEL:gpt-4}    # With default fallback
-      temperature: 0.7
-      max-tokens: 2000
-    output-directory: ${OUTPUT_DIR:./outputs}
-    enable-ai-agents: ${ENABLE_AI_AGENTS:true}
-```
-
-### Development Configuration
-
-For local development, you can:
-
-1. **Use IDE environment variables** (IntelliJ IDEA, Eclipse, VS Code)
-2. **Override in application-dev.yml**:
-```yaml
-mcp:
-  marketing:
-    llm:
-      api-key: "sk-your-dev-key"
-```
-3. **Pass as command-line arguments**:
-```bash
-mvn spring-boot:run -Dspring-boot.run.arguments="--mcp.marketing.llm.api-key=sk-..."
-```
-      provider: openai
-      api-key: ${OPENAI_API_KEY}
-      model: gpt-4
-    output-directory: ./outputs
-```
+Spring Boot automatically reads environment variables. See [Configuration Guide](docs/CONFIGURATION.md) for detailed setup.
 
 ## Contributing
 
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request with tests
+Contributions are welcome! See [Contributing Guide](docs/CONTRIBUTING.md) for details.
+
+## Documentation
+
+- [Quick Start Guide](docs/QUICKSTART.md) - Get started in 5 minutes
+- [Configuration Guide](docs/CONFIGURATION.md) - Setup and environment variables
+- [API Reference](docs/API.md) - Complete API documentation
+- [Architecture Guide](docs/ARCHITECTURE.md) - System design and patterns
+- [Project Summary](docs/PROJECT_SUMMARY.md) - What's been built
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Community
-
-- **Issues**: Report bugs or request features via GitHub Issues
-- **Discussions**: Share ideas and ask questions in GitHub Discussions
-- **Pull Requests**: All contributions are appreciated!
-
-## Roadmap
-
-- [ ] Integration with real CRM systems (HubSpot, Salesforce)
-- [ ] Multi-language support beyond EN/PT
-- [ ] Advanced analytics dashboard
-- [ ] Plugin system for custom tools
-- [ ] Workflow versioning and rollback
-- [ ] Team collaboration features
-
-## Support
-
-For questions or support, please open an issue or reach out via discussions.
 
