@@ -3,29 +3,25 @@ package com.mcp.marketing.tool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcp.marketing.config.MarketingProperties;
 import com.mcp.marketing.observability.ObservabilityService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
  * Tool for generating CRM email sequences
+ * Optimized: extends BaseMarketingTool to eliminate code duplication
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class CrmSequenceTool {
+public class CrmSequenceTool extends BaseMarketingTool {
 
-    private final MarketingProperties properties;
-    private final ObservabilityService observability;
-    private final ObjectMapper objectMapper;
+    public CrmSequenceTool(
+            MarketingProperties properties,
+            ObservabilityService observability,
+            ObjectMapper objectMapper) {
+        super(properties, observability, objectMapper);
+    }
 
     public Map<String, Object> generateCrmSequence(
             String product,
@@ -59,17 +55,21 @@ public class CrmSequenceTool {
 
         List<Map<String, Object>> emails = new ArrayList<>();
 
+        // Adapt greeting and tone based on brand voice
+        String greeting = getGreetingForBrandVoice(brandVoice);
+        String closingTone = getClosingForBrandVoice(brandVoice);
+
         // Email 1: Welcome
         emails.add(createEmail(
                 1,
                 "Welcome to " + product,
-                String.format("Hi {First Name},\n\nWelcome to %s! We're excited to have you join our community of %s.\n\n" +
+                String.format("%s {First Name},\n\nWelcome to %s! We're excited to have you join our community of %s.\n\n" +
                                 "Here's what you can expect:\n" +
                                 "• Exclusive insights and tips\n" +
                                 "• Early access to new features\n" +
                                 "• Dedicated support from our team\n\n" +
-                                "Let's get started on your journey to %s!\n\nBest regards,\nThe %s Team",
-                        product, audience, goals.get(0), product),
+                                "Let's get started on your journey to %s!\n\n%s,\nThe %s Team",
+                        greeting, product, audience, goals.get(0), closingTone, product),
                 "Get Started",
                 "https://example.com/getting-started"
         ));
@@ -78,14 +78,14 @@ public class CrmSequenceTool {
         emails.add(createEmail(
                 2,
                 "How " + product + " Helps " + audience,
-                String.format("Hi {First Name},\n\nWe wanted to share how other %s are using %s to achieve amazing results.\n\n" +
+                String.format("%s {First Name},\n\nWe wanted to share how other %s are using %s to achieve amazing results.\n\n" +
                                 "Case Study: Company X increased their %s by 150%% in just 3 months.\n\n" +
                                 "Key strategies they used:\n" +
                                 "1. Strategy A\n" +
                                 "2. Strategy B\n" +
                                 "3. Strategy C\n\n" +
-                                "Want to replicate their success? Let's talk!\n\nBest regards,\nThe %s Team",
-                        audience, product, goals.get(0), product),
+                                "Want to replicate their success? Let's talk!\n\n%s,\nThe %s Team",
+                        greeting, audience, product, goals.get(0), closingTone, product),
                 "Learn More",
                 "https://example.com/case-studies"
         ));
@@ -94,13 +94,13 @@ public class CrmSequenceTool {
         emails.add(createEmail(
                 3,
                 "Join 10,000+ " + audience + " Using " + product,
-                String.format("Hi {First Name},\n\nDid you know that over 10,000 %s trust %s?\n\n" +
+                String.format("%s {First Name},\n\nDid you know that over 10,000 %s trust %s?\n\n" +
                                 "Here's what they're saying:\n" +
                                 "⭐⭐⭐⭐⭐ \"Game-changer for our team!\" - Sarah J.\n" +
                                 "⭐⭐⭐⭐⭐ \"Best investment we've made\" - Mike T.\n" +
                                 "⭐⭐⭐⭐⭐ \"Results exceeded expectations\" - Lisa K.\n\n" +
-                                "Ready to experience the difference?\n\nBest regards,\nThe %s Team",
-                        audience, product, product),
+                                "Ready to experience the difference?\n\n%s,\nThe %s Team",
+                        greeting, audience, product, closingTone, product),
                 "Start Free Trial",
                 "https://example.com/trial"
         ));
@@ -109,15 +109,15 @@ public class CrmSequenceTool {
         emails.add(createEmail(
                 4,
                 "Special Offer: 20%% Off for " + audience,
-                String.format("Hi {First Name},\n\nAs a valued member of our %s community, we have a special offer just for you.\n\n" +
+                String.format("%s {First Name},\n\nAs a valued member of our %s community, we have a special offer just for you.\n\n" +
                                 "Get 20%% off your first 3 months when you upgrade today!\n\n" +
                                 "This exclusive offer includes:\n" +
                                 "✓ Full access to all features\n" +
                                 "✓ Priority support\n" +
                                 "✓ Custom onboarding session\n" +
                                 "✓ 30-day money-back guarantee\n\n" +
-                                "Offer expires in 48 hours. Don't miss out!\n\nBest regards,\nThe %s Team",
-                        audience, product),
+                                "Offer expires in 48 hours. Don't miss out!\n\n%s,\nThe %s Team",
+                        greeting, audience, closingTone, product),
                 "Claim Offer",
                 "https://example.com/special-offer"
         ));
@@ -126,14 +126,14 @@ public class CrmSequenceTool {
         emails.add(createEmail(
                 5,
                 "We Miss You! Here's What You've Been Missing",
-                String.format("Hi {First Name},\n\nWe noticed you haven't been active lately, and we wanted to check in.\n\n" +
+                String.format("%s {First Name},\n\nWe noticed you haven't been active lately, and we wanted to check in.\n\n" +
                                 "Here's what's new at %s:\n" +
                                 "• New feature X launched\n" +
                                 "• Updated %s resources\n" +
                                 "• Community events and webinars\n\n" +
                                 "We'd love to help you achieve your goals of %s.\n\n" +
-                                "Can we schedule a quick call to discuss your needs?\n\nBest regards,\nThe %s Team",
-                        product, audience, String.join(", ", goals), product),
+                                "Can we schedule a quick call to discuss your needs?\n\n%s,\nThe %s Team",
+                        greeting, product, audience, String.join(", ", goals), closingTone, product),
                 "Reconnect",
                 "https://example.com/schedule-call"
         ));
@@ -177,24 +177,33 @@ public class CrmSequenceTool {
         return metrics;
     }
 
-    private String saveToFile(Map<String, Object> data, String type) {
-        try {
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            String requestId = observability.getCurrentRequestId();
-            String filename = String.format("%s_%s_%s.json", type, requestId, timestamp);
-
-            Path outputDir = Paths.get(properties.getOutputDirectory());
-            Files.createDirectories(outputDir);
-
-            Path filePath = outputDir.resolve(filename);
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(filePath.toFile(), data);
-
-            log.info("Saved {} output to: {}", type, filePath);
-            return filePath.toString();
-        } catch (IOException e) {
-            log.error("Failed to save output file", e);
-            return null;
+    private String getGreetingForBrandVoice(String brandVoice) {
+        if (brandVoice == null || brandVoice.isEmpty()) {
+            return "Hi";
         }
+
+        String voice = brandVoice.toLowerCase();
+        if (voice.contains("formal") || voice.contains("professional")) {
+            return "Hello";
+        } else if (voice.contains("casual") || voice.contains("friendly")) {
+            return "Hey";
+        }
+        return "Hi";
+    }
+
+    private String getClosingForBrandVoice(String brandVoice) {
+        if (brandVoice == null || brandVoice.isEmpty()) {
+            return "Best regards";
+        }
+
+        String voice = brandVoice.toLowerCase();
+        if (voice.contains("formal")) {
+            return "Sincerely";
+        } else if (voice.contains("casual") || voice.contains("friendly")) {
+            return "Cheers";
+        } else if (voice.contains("professional")) {
+            return "Best regards";
+        }
+        return "Best regards";
     }
 }
-

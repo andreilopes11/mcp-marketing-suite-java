@@ -41,5 +41,6 @@ public class MarketingRequest {
 
     @JsonProperty("campaign_duration")
     private String campaignDuration; // Optional
+
 }
 

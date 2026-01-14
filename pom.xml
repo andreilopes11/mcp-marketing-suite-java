@@ -83,6 +83,17 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Caffeine Cache for performance -->
+        <dependency>
+            <artifactId>spring-boot-starter-cache</artifactId>
+            <groupId>org.springframework.boot</groupId>
+        </dependency>
+
+        <dependency>
+            <artifactId>caffeine</artifactId>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

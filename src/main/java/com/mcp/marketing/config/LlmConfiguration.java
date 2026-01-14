@@ -36,7 +36,7 @@ public class LlmConfiguration {
             log.warn("OpenAI API key not configured. Using dummy model. AI features will return placeholder responses.");
 
             // Return a dummy implementation when API key is not configured
-            return userMessage -> {
+            return _ -> {
                 log.warn("Dummy AI model called. Configure OPENAI_API_KEY for real AI responses.");
                 return new Response<>(new AiMessage("AI response placeholder. Configure OpenAI API key to enable AI features."));
             };

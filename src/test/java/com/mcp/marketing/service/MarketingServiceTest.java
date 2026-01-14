@@ -1,7 +1,7 @@
 package com.mcp.marketing.service;
 
 import com.mcp.marketing.config.MarketingProperties;
-import com.mcp.marketing.mcp.McpResourceProvider;
+import com.mcp.marketing.resource.McpResourceProvider;
 import com.mcp.marketing.model.MarketingRequest;
 import com.mcp.marketing.model.MarketingResponse;
 import com.mcp.marketing.observability.ObservabilityService;

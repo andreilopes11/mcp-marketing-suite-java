@@ -3,16 +3,9 @@ package com.mcp.marketing.tool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcp.marketing.config.MarketingProperties;
 import com.mcp.marketing.observability.ObservabilityService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,15 +13,18 @@ import java.util.Map;
 
 /**
  * Tool for generating SEO strategies and plans
+ * Optimized: extends BaseMarketingTool to eliminate code duplication
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class SeoStrategyTool {
+public class SeoStrategyTool extends BaseMarketingTool {
 
-    private final MarketingProperties properties;
-    private final ObservabilityService observability;
-    private final ObjectMapper objectMapper;
+    public SeoStrategyTool(
+            MarketingProperties properties,
+            ObservabilityService observability,
+            ObjectMapper objectMapper) {
+        super(properties, observability, objectMapper);
+    }
 
     public Map<String, Object> generateSeoStrategy(
             String product,
@@ -39,12 +35,13 @@ public class SeoStrategyTool {
         return observability.traceOperation("generate_seo_strategy", () -> {
             Map<String, Object> result = new HashMap<>();
 
-            result.put("strategy_overview", generateOverview(product, audience, goals));
+            result.put("strategy_overview", generateOverview(product, audience, brandVoice, goals));
             result.put("keyword_strategy", generateKeywordStrategy(product, audience));
-            result.put("content_plan", generateContentPlan(product, audience));
+            result.put("content_plan", generateContentPlan(product, audience, brandVoice));
             result.put("technical_seo", generateTechnicalSeo());
             result.put("link_building", generateLinkBuilding());
             result.put("performance_tracking", generatePerformanceTracking());
+            result.put("brand_voice", brandVoice);
 
             // Save to file
             String filePath = saveToFile(result, "seo_strategy");
@@ -55,16 +52,18 @@ public class SeoStrategyTool {
         });
     }
 
-    private Map<String, Object> generateOverview(String product, String audience, List<String> goals) {
+    private Map<String, Object> generateOverview(String product, String audience, String brandVoice, List<String> goals) {
         Map<String, Object> overview = new HashMap<>();
         overview.put("objective", String.format(
                 "Increase organic visibility for %s targeting %s to achieve %s",
                 product, audience, String.join(", ", goals)
         ));
+        overview.put("brand_voice", brandVoice);
+        overview.put("content_tone", brandVoice != null ? brandVoice : "Professional and informative");
         overview.put("timeline", "6-12 months");
         overview.put("key_focus_areas", Arrays.asList(
                 "Keyword optimization",
-                "Content marketing",
+                "Content marketing aligned with brand voice",
                 "Technical SEO",
                 "Link building",
                 "User experience"
@@ -109,25 +108,29 @@ public class SeoStrategyTool {
         return kw;
     }
 
-    private Map<String, Object> generateContentPlan(String product, String audience) {
+    private Map<String, Object> generateContentPlan(String product, String audience, String brandVoice) {
         Map<String, Object> contentPlan = new HashMap<>();
 
+        String voiceGuidance = brandVoice != null ? " in a " + brandVoice + " tone" : "";
+
         List<Map<String, Object>> contentTypes = Arrays.asList(
-                createContentType("Blog Posts", "2-3 per week", "Educational, SEO-optimized articles about " + product),
-                createContentType("Product Pages", "Ongoing optimization", "Keyword-rich descriptions for " + audience),
-                createContentType("Case Studies", "1 per month", "Success stories with target keywords"),
-                createContentType("How-to Guides", "2 per month", "Comprehensive tutorials and guides"),
+                createContentType("Blog Posts", "2-3 per week", "Educational, SEO-optimized articles about " + product + voiceGuidance),
+                createContentType("Product Pages", "Ongoing optimization", "Keyword-rich descriptions for " + audience + voiceGuidance),
+                createContentType("Case Studies", "1 per month", "Success stories with target keywords" + voiceGuidance),
+                createContentType("How-to Guides", "2 per month", "Comprehensive tutorials and guides" + voiceGuidance),
                 createContentType("Video Content", "1 per week", "Embedded videos with transcripts")
         );
 
         contentPlan.put("content_types", contentTypes);
+        contentPlan.put("brand_voice_guidelines", brandVoice != null ? brandVoice : "Professional and engaging");
         contentPlan.put("content_calendar", "Create 90-day rolling calendar");
         contentPlan.put("optimization_guidelines", Arrays.asList(
                 "1,500-2,500 word count for pillar content",
                 "Include target keyword in title, H1, and first paragraph",
                 "Use semantic keywords throughout",
                 "Add internal and external links",
-                "Optimize images with alt text"
+                "Optimize images with alt text",
+                "Maintain consistent brand voice: " + (brandVoice != null ? brandVoice : "Professional")
         ));
 
         return contentPlan;
@@ -237,26 +240,6 @@ public class SeoStrategyTool {
         ));
 
         return tracking;
-    }
-
-    private String saveToFile(Map<String, Object> data, String type) {
-        try {
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            String requestId = observability.getCurrentRequestId();
-            String filename = String.format("%s_%s_%s.json", type, requestId, timestamp);
-
-            Path outputDir = Paths.get(properties.getOutputDirectory());
-            Files.createDirectories(outputDir);
-
-            Path filePath = outputDir.resolve(filename);
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(filePath.toFile(), data);
-
-            log.info("Saved {} output to: {}", type, filePath);
-            return filePath.toString();
-        } catch (IOException e) {
-            log.error("Failed to save output file", e);
-            return null;
-        }
     }
 }
 

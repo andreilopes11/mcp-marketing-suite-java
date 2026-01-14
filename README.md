@@ -78,6 +78,7 @@ collaborate, learn, and evolve the solution together.
 ### 📚 Documentation
 
 - **[Getting Started Guide](docs/GETTING_STARTED.md)** ⚡ - Get running in 2 minutes!
+- **[Execution Guide](docs/README-EXEC.md)** 🚀 - Generate real campaigns with detailed examples
 - **[Configuration Guide](docs/CONFIGURATION.md)** - Detailed configuration options
 - **[API Documentation](docs/API.md)** - Complete API reference
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions

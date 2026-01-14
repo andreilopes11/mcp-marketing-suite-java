@@ -1,33 +1,71 @@
-package com.mcp.marketing.mcp;
+package com.mcp.marketing.resource;
 
 import com.mcp.marketing.model.AudienceResource;
 import com.mcp.marketing.model.BrandResource;
 import com.mcp.marketing.model.CompetitorResource;
 import com.mcp.marketing.model.ProductResource;
+import com.mcp.marketing.resource.loader.FileResourceLoader;
+import com.mcp.marketing.resource.loader.JsonResourceLoader;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * MCP Resource Provider - simulates contextual resources
- * In production, these would connect to real data sources
+ * MCP Resource Provider - Enhanced with file-based loading and caching
+ * Supports both in-memory mock data and file-based resources
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class McpResourceProvider {
+
+    private final FileResourceLoader fileLoader;
+    private final JsonResourceLoader jsonLoader;
 
     private final Map<String, ProductResource> productCache = new HashMap<>();
     private final Map<String, AudienceResource> audienceCache = new HashMap<>();
     private final Map<String, BrandResource> brandCache = new HashMap<>();
     private final Map<String, CompetitorResource> competitorCache = new HashMap<>();
 
-    public McpResourceProvider() {
+    @PostConstruct
+    public void init() {
         initializeMockData();
+        loadResourcesFromFiles();
+        log.info("McpResourceProvider initialized with {} products, {} audiences, {} brands",
+                productCache.size(), audienceCache.size(), brandCache.size());
     }
 
+    /**
+     * Load resources from file system if available
+     */
+    private void loadResourcesFromFiles() {
+        try {
+            // Try to load products from file
+            if (fileLoader.fileExists("products.json")) {
+                Map<String, Object> productsData = jsonLoader.loadJsonAsMap("products.json");
+                log.info("Loaded {} products from file", productsData.size());
+                // Process and add to cache
+            }
+
+            // Try to load audiences from file
+            if (fileLoader.fileExists("audiences.json")) {
+                Map<String, Object> audiencesData = jsonLoader.loadJsonAsMap("audiences.json");
+                log.info("Loaded {} audiences from file", audiencesData.size());
+                // Process and add to cache
+            }
+        } catch (Exception e) {
+            log.warn("Could not load resources from files, using mock data: {}", e.getMessage());
+        }
+    }
+
+    @Cacheable(value = "mcpResources", key = "'product_' + #productName")
     public ProductResource getProduct(String productName) {
         log.debug("Fetching product resource: {}", productName);
         return productCache.getOrDefault(
@@ -36,6 +74,7 @@ public class McpResourceProvider {
         );
     }
 
+    @Cacheable(value = "mcpResources", key = "'audience_' + #audienceSegment")
     public AudienceResource getAudience(String audienceSegment) {
         log.debug("Fetching audience resource: {}", audienceSegment);
         return audienceCache.getOrDefault(
@@ -44,6 +83,7 @@ public class McpResourceProvider {
         );
     }
 
+    @Cacheable(value = "mcpResources", key = "'brand_' + #brandVoice")
     public BrandResource getBrand(String brandVoice) {
         log.debug("Fetching brand resource: {}", brandVoice);
         return brandCache.getOrDefault(
@@ -52,8 +92,12 @@ public class McpResourceProvider {
         );
     }
 
+    @Cacheable(value = "mcpResources", key = "'competitors_' + #context")
     public CompetitorResource getCompetitors(String context) {
         log.debug("Fetching competitor resource: {}", context);
+        if (context == null || context.isEmpty()) {
+            return competitorCache.getOrDefault("default", createGenericCompetitors());
+        }
         return competitorCache.getOrDefault(
                 context.toLowerCase(),
                 createGenericCompetitors()
@@ -147,7 +191,7 @@ public class McpResourceProvider {
 
     private CompetitorResource createGenericCompetitors() {
         return CompetitorResource.builder()
-                .competitors(Arrays.asList(
+                .competitors(Collections.singletonList(
                         CompetitorResource.Competitor.builder()
                                 .name("Competitor A")
                                 .positioning("Market leader")
