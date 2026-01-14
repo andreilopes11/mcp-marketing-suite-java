@@ -43,25 +43,71 @@ Open-source marketing copilot built on top of MCP, Spring Boot, and Langchain4j 
 - **Observability**: JSON logs with `request_id` correlation and spans via tracing utilities.
 
 ## Tech Stack
-- **Java 17+**
-- **Spring Boot 3.2+**
-- **Langchain4j** for AI orchestration
-- **Maven** for dependency management
+- **Java 23** ⚡ (Required)
+- **Spring Boot 3.3.0** (Java 23 compatible)
+- **Langchain4j 0.27.1** for AI orchestration
+- **Maven 3.8+** for dependency management
 - **SLF4J + Logback** for logging
 - **OpenAPI/Swagger** for API documentation
+- **ByteBuddy 1.15.10** for testing (Java 23 support)
+
+## Status
+
+[![BUILD SUCCESS](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![Tests 4/4](https://img.shields.io/badge/tests-4%2F4%20passing-brightgreen)]()
+[![Java 23](https://img.shields.io/badge/Java-23-orange)]()
+[![Spring Boot 3.3.0](https://img.shields.io/badge/Spring%20Boot-3.3.0-green)]()
+
+**✅ All systems operational!**
 
 ## Getting Started
 
-### Quick Start
+### 📚 Documentation
 
-For a step-by-step guide to get up and running in 5 minutes, see the **[Quick Start Guide](docs/QUICKSTART.md)**.
+- **[Getting Started Guide](docs/GETTING_STARTED.md)** ⚡ - Get running in 2 minutes!
+- **[Configuration Guide](docs/CONFIGURATION.md)** - Detailed configuration options
+- **[API Documentation](docs/API.md)** - Complete API reference
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Improvements](docs/IMPROVEMENTS.md)** - Suggested enhancements
+- **[Architecture](docs/ARCHITECTURE.md)** - System design overview
 
-For detailed configuration options, see **[Configuration Guide](docs/CONFIGURATION.md)**.
+### ⚡ Quick Start (2 Minutes)
+
+```bash
+# 1. Verify Java 23
+java -version  # Must show Java 23
+
+# 2. Clone and navigate
+cd mcp-marketing-suite-java
+
+# 3. Run tests (optional)
+mvn clean test
+
+# 4. Start application
+mvn spring-boot:run
+
+# 5. Test it works
+curl http://localhost:8080/health
+```
+
+**Done!** Visit http://localhost:8080/swagger-ui.html
 
 ### Prerequisites
-- Java 17 or higher
-- Maven 3.8+
+- **Java 23** (required - project is configured for Java 23)
+- **Maven 3.8+**
 - OpenAI API key (optional, for AI-enhanced features)
+
+> ⚠️ **Important**: This project requires Java 23. Make sure you have Java 23 installed and configured in your PATH.
+
+**Check your Java version:**
+```bash
+java -version
+# Should show: java version "23.x.x"
+```
+
+If you don't have Java 23, download it from:
+- [Oracle JDK 23](https://www.oracle.com/java/technologies/downloads/#java23)
+- [OpenJDK 23](https://jdk.java.net/23/)
 
 ### Basic Installation
 

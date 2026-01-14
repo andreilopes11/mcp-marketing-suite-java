@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,7 +95,7 @@ class MarketingServiceTest {
     void testGenerateCrmSequence_Success() {
         // Arrange
         Map<String, Object> mockSequence = new HashMap<>();
-        mockSequence.put("emails", Arrays.asList());
+        mockSequence.put("emails", List.of());
         mockSequence.put("output_file", "test-crm.json");
 
         when(crmSequenceTool.generateCrmSequence(anyString(), anyString(), anyString(), anyList()))
@@ -113,7 +114,7 @@ class MarketingServiceTest {
     void testGenerateSeoStrategy_Success() {
         // Arrange
         Map<String, Object> mockStrategy = new HashMap<>();
-        mockStrategy.put("keywords", Arrays.asList());
+        mockStrategy.put("keywords", List.of());
         mockStrategy.put("output_file", "test-seo.json");
 
         when(seoStrategyTool.generateSeoStrategy(anyString(), anyString(), anyString(), anyList()))
