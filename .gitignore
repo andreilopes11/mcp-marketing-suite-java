@@ -23,10 +23,6 @@ mvnw.cmd
 logs/
 *.log
 
-# Sensitive configuration files (if they contain hardcoded secrets)
-# Note: application-dev.yml should use env vars, but if you hardcode secrets, add it here:
-# src/main/resources/application-dev.yml
-
 # Output directory
 outputs/
 dev-outputs/

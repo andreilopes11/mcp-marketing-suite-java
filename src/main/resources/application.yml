@@ -32,6 +32,11 @@ mcp:
       - en
       - pt
       - es
+  openai:
+    title: MCP Marketing Suite API
+    description: Marketing content automation endpoints
+    version: v1
+    server-url: http://localhost:8080
 
 springdoc:
   api-docs:

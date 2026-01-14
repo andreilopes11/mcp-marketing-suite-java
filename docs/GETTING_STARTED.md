@@ -175,7 +175,7 @@ mcp:
 ```
 mcp-marketing-suite-java/
 ├── src/main/java/com/mcp/marketing/
-│   ├── McpMarketingApplication.java    # Main entry point
+│   ├── Application.java                # Main entry point
 │   ├── config/                         # Configuration classes
 │   ├── controller/                     # REST controllers
 │   ├── service/                        # Business logic

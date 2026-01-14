@@ -1,8 +1,10 @@
 package com.mcp.marketing.config;
 
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -11,21 +13,37 @@ import java.util.List;
  */
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "mcp.marketing")
+@RequiredArgsConstructor
 public class MarketingProperties {
 
-    private LlmConfig llm = new LlmConfig();
-    private String outputDirectory = "./outputs";
-    private boolean enableAiAgents = true;
-    private List<String> supportedLanguages = List.of("en", "pt");
+    private final LlmConfig llm;
+
+    @Value("${mcp.marketing.output-directory:./outputs}")
+    private String outputDirectory;
+
+    @Value("${mcp.marketing.enable-ai-agents:true}")
+    private boolean enableAiAgents;
+
+    @Value("#{'${mcp.marketing.supported-languages:en,pt,es}'.split(',')}")
+    private List<String> supportedLanguages;
 
     @Data
+    @Component
     public static class LlmConfig {
-        private String provider = "openai";
+
+        @Value("${mcp.marketing.llm.provider:openai}")
+        private String provider;
+
+        @Value("${mcp.marketing.llm.api-key:}")
         private String apiKey;
-        private String model = "gpt-4";
-        private double temperature = 0.7;
-        private int maxTokens = 2000;
+
+        @Value("${mcp.marketing.llm.model:gpt-4}")
+        private String model;
+
+        @Value("${mcp.marketing.llm.temperature:0.2}")
+        private double temperature;
+
+        @Value("${mcp.marketing.llm.max-tokens:2000}")
+        private int maxTokens;
     }
 }
-

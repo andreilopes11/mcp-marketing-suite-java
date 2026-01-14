@@ -77,7 +77,7 @@ Production-ready Java application for marketing content generation. Built with S
 
 ```
 src/main/java/com/mcp/marketing/
-├── McpMarketingApplication.java
+├── Application.java
 ├── config/
 │   ├── MarketingProperties.java
 │   ├── LlmConfiguration.java
