@@ -1,0 +1,55 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: mcp-marketing-suite
+  jackson:
+    serialization:
+      indent-output: true
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+mcp:
+  marketing:
+    llm:
+      provider: openai
+      api-key: ${OPENAI_API_KEY:}
+      model: ${LLM_MODEL:gpt-4}
+      temperature: 0.7
+      max-tokens: 2000
+    output-directory: ${OUTPUT_DIR:./outputs}
+    enable-ai-agents: ${ENABLE_AI_AGENTS:true}
+    supported-languages:
+      - en
+      - pt
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.mcp.marketing: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [request_id=%X{request_id}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [request_id=%X{request_id}] - %msg%n"
+  file:
+    name: logs/mcp-marketing-suite.log
+

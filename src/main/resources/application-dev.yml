@@ -1,0 +1,57 @@
+# Development Profile Configuration
+# This file is for LOCAL DEVELOPMENT only
+# To use: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+# SECURITY WARNING:
+# Never commit real API keys to version control!
+# This file should contain placeholders or be in .gitignore
+
+mcp:
+  marketing:
+    llm:
+      provider: openai
+      # Option 1: Still use environment variables (recommended)
+      api-key: ${OPENAI_API_KEY:}
+
+      # Option 2: Hardcode for local dev (add this file to .gitignore)
+      # api-key: "sk-your-dev-key-here"
+
+      model: ${LLM_MODEL:gpt-3.5-turbo}  # Use cheaper model for dev
+      temperature: 0.7
+      max-tokens: 1500  # Lower for faster testing
+
+    output-directory: ${OUTPUT_DIR:./dev-outputs}
+    enable-ai-agents: ${ENABLE_AI_AGENTS:true}
+
+    supported-languages:
+      - en
+      - pt
+
+# Enable all actuator endpoints for development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Detailed logging for development
+logging:
+  level:
+    root: INFO
+    com.mcp.marketing: DEBUG
+    dev.langchain4j: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [request_id=%X{request_id}] - %msg%n"
+
+# Swagger UI enabled
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+
