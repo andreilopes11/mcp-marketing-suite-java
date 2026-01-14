@@ -44,6 +44,9 @@ public class AdGeneratorTool extends BaseMarketingTool {
             result.put("output_file", filePath);
 
             observability.logMetric("ads_generated", 3);
+
+            log.info("Generated ads for product: {}, audience: {}, brandVoice: {}, goals: {}",
+                    product, audience, brandVoice, goals);
             return result;
         });
     }
@@ -75,6 +78,7 @@ public class AdGeneratorTool extends BaseMarketingTool {
         googleAds.put("display_path", "example.com/product");
         googleAds.put("brand_voice", brandVoice);
 
+        log.info("Generated Google Ads: {}", googleAds);
         return googleAds;
     }
 
@@ -88,12 +92,11 @@ public class AdGeneratorTool extends BaseMarketingTool {
 
         // Adapt tone based on brand voice
         String tone = brandVoice != null && brandVoice.toLowerCase().contains("professional") ?
-            "Discover" : "🚀 Discover";
+                "Discover" : "🚀 Discover";
 
         metaAds.put("primary_text", String.format(
-                "Attention %s! %s how %s can help you achieve %s. " +
-                        "Join the revolution today!",
-                audience, tone, product, goals.get(0)
+                "Attention %s! %s how %s can help you achieve %s. Join the revolution today!",
+                audience, tone, product, goals.getFirst()
         ));
 
         metaAds.put("headline", product + " - Your Success Partner");
@@ -102,6 +105,7 @@ public class AdGeneratorTool extends BaseMarketingTool {
         metaAds.put("link", "https://example.com/meta-landing");
         metaAds.put("brand_voice", brandVoice);
 
+        log.info("Generated Meta Ads: {}", metaAds);
         return metaAds;
     }
 
@@ -114,8 +118,7 @@ public class AdGeneratorTool extends BaseMarketingTool {
         Map<String, Object> linkedInAds = new HashMap<>();
 
         linkedInAds.put("introductory_text", String.format(
-                "%s professionals are using %s to drive results. " +
-                        "Discover how our solution can help you %s.",
+                "%s professionals are using %s to drive results. Discover how our solution can help you %s.",
                 audience, product, String.join(" and ", goals).toLowerCase()
         ));
 
@@ -125,6 +128,7 @@ public class AdGeneratorTool extends BaseMarketingTool {
         linkedInAds.put("call_to_action", "Request Demo");
         linkedInAds.put("brand_voice", brandVoice);
 
+        log.info("Generated LinkedIn Ads: {}", linkedInAds);
         return linkedInAds;
     }
 
@@ -145,6 +149,7 @@ public class AdGeneratorTool extends BaseMarketingTool {
         qaScore.put("brand_alignment", brandAlignment);
         qaScore.put("call_to_action_strength", ctaStrength);
 
+        log.info("Calculated QA Score: {}", qaScore);
         return qaScore;
     }
 
@@ -161,6 +166,8 @@ public class AdGeneratorTool extends BaseMarketingTool {
         if (ads.containsKey("linkedin_ads") && ((Map<String, Object>) ads.get("linkedin_ads")).containsKey("introductory_text")) {
             score += 10;
         }
+
+        log.info("Clarity analysis score: {}", Math.min(score, 100));
         return Math.min(score, 100);
     }
 
@@ -176,6 +183,8 @@ public class AdGeneratorTool extends BaseMarketingTool {
                 }
             }
         }
+
+        log.info("Relevance analysis score: {}", Math.min(score, 100));
         return Math.min(score, 100);
     }
 
@@ -201,6 +210,8 @@ public class AdGeneratorTool extends BaseMarketingTool {
         if (consistent && brandVoice != null) {
             score += 15;
         }
+
+        log.info("Brand alignment analysis score: {}", Math.min(score, 100));
         return Math.min(score, 100);
     }
 
@@ -223,6 +234,7 @@ public class AdGeneratorTool extends BaseMarketingTool {
             }
         }
 
+        log.info("CTA strength analysis score: {}", Math.min(score, 100));
         return Math.min(score, 100);
     }
 
@@ -250,9 +262,9 @@ public class AdGeneratorTool extends BaseMarketingTool {
 
         // Check if brand voice is applied
         boolean hasBrandVoice = ads.values().stream()
-            .filter(v -> v instanceof Map)
-            .map(v -> (Map<String, Object>) v)
-            .anyMatch(m -> m.containsKey("brand_voice") && m.get("brand_voice") != null);
+                .filter(v -> v instanceof Map)
+                .map(v -> (Map<String, Object>) v)
+                .anyMatch(m -> m.containsKey("brand_voice") && m.get("brand_voice") != null);
 
         if (!hasBrandVoice) {
             recommendations.add("Apply consistent brand voice to strengthen brand identity");
@@ -262,6 +274,7 @@ public class AdGeneratorTool extends BaseMarketingTool {
         recommendations.add("A/B test different variations to improve conversion rates");
         recommendations.add("Ensure landing page messaging aligns with ad copy");
 
+        log.info("Generated recommendations: {}", recommendations);
         return recommendations;
     }
 }

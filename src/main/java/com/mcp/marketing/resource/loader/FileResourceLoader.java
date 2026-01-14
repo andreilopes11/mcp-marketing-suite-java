@@ -32,6 +32,8 @@ public class FileResourceLoader {
                 log.warn("File not found: {}, using fallback", fileName);
                 return null;
             }
+
+            log.info("Loading file: {}", fileName);
             return Files.readString(filePath);
         } catch (IOException e) {
             log.error("Error loading file: {}", fileName, e);
@@ -51,6 +53,7 @@ public class FileResourceLoader {
             }
 
             try (Stream<Path> paths = Files.walk(dirPath, 1)) {
+                log.info("Loading files from directory: {}", dirName);
                 return paths
                         .filter(Files::isRegularFile)
                         .map(path -> {
@@ -75,6 +78,7 @@ public class FileResourceLoader {
      */
     public boolean fileExists(String fileName) {
         Path filePath = Paths.get(RESOURCES_PATH, fileName);
+        log.info("Checking existence of file: {}", fileName);
         return Files.exists(filePath);
     }
 
@@ -85,10 +89,12 @@ public class FileResourceLoader {
         try {
             Path dirPath = Paths.get(RESOURCES_PATH, dirName);
             if (!Files.exists(dirPath) || !Files.isDirectory(dirPath)) {
+                log.warn("Directory not found: {}", dirName);
                 return List.of();
             }
 
             try (Stream<Path> paths = Files.walk(dirPath, 1)) {
+                log.info("Listing files in directory: {}", dirName);
                 return paths
                         .filter(Files::isRegularFile)
                         .map(path -> path.getFileName().toString())

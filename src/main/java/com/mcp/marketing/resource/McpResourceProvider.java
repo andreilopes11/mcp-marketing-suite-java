@@ -67,7 +67,7 @@ public class McpResourceProvider {
 
     @Cacheable(value = "mcpResources", key = "'product_' + #productName")
     public ProductResource getProduct(String productName) {
-        log.debug("Fetching product resource: {}", productName);
+        log.info("Fetching product resource: {}", productName);
         return productCache.getOrDefault(
                 productName.toLowerCase(),
                 createGenericProduct(productName)
@@ -76,7 +76,7 @@ public class McpResourceProvider {
 
     @Cacheable(value = "mcpResources", key = "'audience_' + #audienceSegment")
     public AudienceResource getAudience(String audienceSegment) {
-        log.debug("Fetching audience resource: {}", audienceSegment);
+        log.info("Fetching audience resource: {}", audienceSegment);
         return audienceCache.getOrDefault(
                 audienceSegment.toLowerCase(),
                 createGenericAudience(audienceSegment)
@@ -85,7 +85,7 @@ public class McpResourceProvider {
 
     @Cacheable(value = "mcpResources", key = "'brand_' + #brandVoice")
     public BrandResource getBrand(String brandVoice) {
-        log.debug("Fetching brand resource: {}", brandVoice);
+        log.info("Fetching brand resource: {}", brandVoice);
         return brandCache.getOrDefault(
                 brandVoice.toLowerCase(),
                 createGenericBrand(brandVoice)
@@ -94,7 +94,7 @@ public class McpResourceProvider {
 
     @Cacheable(value = "mcpResources", key = "'competitors_' + #context")
     public CompetitorResource getCompetitors(String context) {
-        log.debug("Fetching competitor resource: {}", context);
+        log.info("Fetching competitor resource: {}", context);
         if (context == null || context.isEmpty()) {
             return competitorCache.getOrDefault("default", createGenericCompetitors());
         }

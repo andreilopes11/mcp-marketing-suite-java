@@ -34,7 +34,7 @@ public class JsonResourceLoader {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> result = objectMapper.readValue(content, Map.class);
-            log.debug("Successfully loaded JSON from: {}", fileName);
+            log.info("Successfully loaded JSON from: {}", fileName);
             return result;
         } catch (Exception e) {
             log.error("Error parsing JSON file: {}", fileName, e);
@@ -55,7 +55,7 @@ public class JsonResourceLoader {
             }
 
             T result = objectMapper.readValue(content, clazz);
-            log.debug("Successfully loaded JSON from: {} as {}", fileName, clazz.getSimpleName());
+            log.info("Successfully loaded JSON from: {} as {}", fileName, clazz.getSimpleName());
             return result;
         } catch (Exception e) {
             log.error("Error parsing JSON file: {} to {}", fileName, clazz.getSimpleName(), e);

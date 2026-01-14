@@ -66,6 +66,7 @@ public class MarketingService {
      */
     public MarketingResponse generateAds(MarketingRequest request) {
         validateRequest(request);
+
         return executeWithObservability("ad generation", request, () -> {
             // Pre-load resources asynchronously (cached, non-blocking)
             CompletableFuture<Void> resourcesFuture = taskExecutor != null ? CompletableFuture.runAsync(() -> {
@@ -86,6 +87,7 @@ public class MarketingService {
             resourcesFuture.join();
 
             // Enhance with AI if enabled
+            log.info("Checking if AI enhancement is enabled for ads: {}", ads);
             return maybeEnhanceWithAI(ads, request);
         });
     }
@@ -96,11 +98,14 @@ public class MarketingService {
      */
     public MarketingResponse generateCrmSequence(MarketingRequest request) {
         validateRequest(request);
+
         return executeWithObservability("CRM sequence generation", request, () -> {
             // Pre-load resources (cached)
             resourceProvider.getProduct(request.getProduct());
             resourceProvider.getAudience(request.getAudience());
 
+            log.info("Generating CRM sequence for product: {}", request.getProduct());
+            log.info("Audience segment: {}", request.getAudience());
             return crmSequenceTool.generateCrmSequence(
                     request.getProduct(),
                     request.getAudience(),
@@ -124,6 +129,8 @@ public class MarketingService {
                 resourceProvider.getCompetitors(request.getCompetitors());
             }
 
+            log.info("Generating SEO strategy for product: {}", request.getProduct());
+            log.info("Including competitor analysis for: {}", request.getCompetitors());
             return seoStrategyTool.generateSeoStrategy(
                     request.getProduct(),
                     request.getAudience(),
@@ -142,22 +149,24 @@ public class MarketingService {
             Map<String, Object> fullStrategy = new HashMap<>();
 
             // Pre-load all resources in parallel (will be cached)
-            CompletableFuture<Void> resourcePreload = taskExecutor != null
-                    ? CompletableFuture.runAsync(() -> {
+            CompletableFuture<Void> resourcePreload = taskExecutor != null ? CompletableFuture.runAsync(() -> {
                 resourceProvider.getProduct(request.getProduct());
                 resourceProvider.getAudience(request.getAudience());
                 resourceProvider.getBrand(request.getBrandVoice());
                 if (request.getCompetitors() != null && !request.getCompetitors().isEmpty()) {
                     resourceProvider.getCompetitors(request.getCompetitors());
                 }
-            }, taskExecutor)
-                    : CompletableFuture.completedFuture(null);
+            }, taskExecutor) : CompletableFuture.completedFuture(null);
 
             // Parallel execution with configured executor for better performance
             Executor executor = taskExecutor != null ? taskExecutor : Runnable::run;
 
             CompletableFuture<Map<String, Object>> adsFuture = CompletableFuture.supplyAsync(() -> {
                 try {
+                    log.info("Generating ads as part of full strategy for product: {}", request.getProduct());
+                    log.info("Audience segment: {}", request.getAudience());
+                    log.info("Brand voice: {}", request.getBrandVoice());
+                    log.info("Marketing goals: {}", request.getGoals());
                     return adGeneratorTool.generateAds(
                             request.getProduct(),
                             request.getAudience(),
@@ -172,6 +181,10 @@ public class MarketingService {
 
             CompletableFuture<Map<String, Object>> crmFuture = CompletableFuture.supplyAsync(() -> {
                 try {
+                    log.info("Generating CRM sequence as part of full strategy for product: {}", request.getProduct());
+                    log.info("Audience segment: {}", request.getAudience());
+                    log.info("Brand voice: {}", request.getBrandVoice());
+                    log.info("Marketing goals: {}", request.getGoals());
                     return crmSequenceTool.generateCrmSequence(
                             request.getProduct(),
                             request.getAudience(),
@@ -186,6 +199,10 @@ public class MarketingService {
 
             CompletableFuture<Map<String, Object>> seoFuture = CompletableFuture.supplyAsync(() -> {
                 try {
+                    log.info("Generating SEO strategy as part of full strategy for product: {}", request.getProduct());
+                    log.info("Audience segment: {}", request.getAudience());
+                    log.info("Brand voice: {}", request.getBrandVoice());
+                    log.info("Marketing goals: {}", request.getGoals());
                     return seoStrategyTool.generateSeoStrategy(
                             request.getProduct(),
                             request.getAudience(),
@@ -217,6 +234,11 @@ public class MarketingService {
                     "goals", request.getGoals()
             ));
 
+            log.info("Full GTM strategy generated successfully for product: {}, audience: {}, goals: {}",
+                    request.getProduct(),
+                    request.getAudience(),
+                    request.getGoals()
+            );
             return fullStrategy;
         });
     }
@@ -239,7 +261,6 @@ public class MarketingService {
 
             Map<String, Object> data = operation.get();
             long executionTime = System.currentTimeMillis() - startTime;
-
             return buildSuccessResponse(requestId, data, operationType, executionTime);
 
         } catch (Exception e) {
@@ -262,6 +283,7 @@ public class MarketingService {
             String operationType,
             long executionTime) {
 
+        log.info("{} successful for requestId: {}", operationType, requestId);
         return MarketingResponse.builder()
                 .requestId(requestId)
                 .status("success")
@@ -282,6 +304,7 @@ public class MarketingService {
             String errorMessage,
             long executionTime) {
 
+        log.info("{} failed for requestId: {} with error: {}", operationType, requestId, errorMessage);
         return MarketingResponse.builder()
                 .requestId(requestId)
                 .status("error")
@@ -300,7 +323,7 @@ public class MarketingService {
         }
 
         try {
-            log.debug("Enhancing ads with AI for request: {}", request.getProduct());
+            log.info("Enhancing ads with AI for request: {}", request.getProduct());
             return enhanceWithAI(ads, request);
         } catch (Exception e) {
             log.warn("AI enhancement failed, using original ads: {}", e.getMessage());
@@ -310,20 +333,22 @@ public class MarketingService {
 
     /**
      * AI enhancement logic - placeholder for future implementation
-     * @param ads The ads to enhance
+     *
+     * @param ads     The ads to enhance
      * @param request The original marketing request for context
      * @return Enhanced ads or original ads if enhancement not implemented
      */
     private Map<String, Object> enhanceWithAI(Map<String, Object> ads, MarketingRequest request) {
         // TODO: Implement AI-based enhancement using chatModel and request context
         // Future implementation will use request.getBrandVoice(), request.getGoals(), etc.
-        log.debug("AI enhancement placeholder - returning original ads for product: {}",
+        log.info("AI enhancement placeholder - returning original ads for product: {}",
                 request.getProduct());
         return ads;
     }
 
     /**
      * Validate marketing request
+     *
      * @throws IllegalArgumentException if validation fails
      */
     private void validateRequest(MarketingRequest request) {
@@ -348,6 +373,6 @@ public class MarketingService {
             throw new IllegalArgumentException("Marketing goals cannot contain empty values");
         }
 
-        log.debug("Request validation passed for product: {}", request.getProduct());
+        log.info("Request validation passed for product: {}", request.getProduct());
     }
 }

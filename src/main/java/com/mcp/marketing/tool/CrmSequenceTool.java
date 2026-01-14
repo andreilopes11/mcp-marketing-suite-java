@@ -43,6 +43,9 @@ public class CrmSequenceTool extends BaseMarketingTool {
             result.put("output_file", filePath);
 
             observability.logMetric("crm_emails_generated", 5);
+
+            log.info("Generated CRM email sequence for product: {}, audience: {}, brand voice: {}, goals: {}",
+                    product, audience, brandVoice, goals);
             return result;
         });
     }
@@ -138,6 +141,7 @@ public class CrmSequenceTool extends BaseMarketingTool {
                 "https://example.com/schedule-call"
         ));
 
+        log.info("Generated {} emails for CRM sequence.", emails.size());
         return emails;
     }
 
@@ -155,6 +159,8 @@ public class CrmSequenceTool extends BaseMarketingTool {
         email.put("cta_text", ctaText);
         email.put("cta_link", ctaLink);
         email.put("personalization_tokens", Arrays.asList("First Name", "Company", "Industry"));
+
+        log.info("Created email {}: {}", sequence, subject);
         return email;
     }
 

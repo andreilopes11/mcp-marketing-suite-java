@@ -48,6 +48,9 @@ public class SeoStrategyTool extends BaseMarketingTool {
             result.put("output_file", filePath);
 
             observability.logMetric("seo_strategy_generated", 1);
+
+            log.info("Generated SEO strategy for product: {}, audience: {}, brand voice: {}, goals: {}",
+                    product, audience, brandVoice, goals);
             return result;
         });
     }
@@ -68,6 +71,9 @@ public class SeoStrategyTool extends BaseMarketingTool {
                 "Link building",
                 "User experience"
         ));
+
+        log.info("Generated SEO strategy overview for product: {}, audience: {}, brand voice: {}, goals: {}",
+                product, audience, brandVoice, goals);
         return overview;
     }
 
@@ -96,6 +102,9 @@ public class SeoStrategyTool extends BaseMarketingTool {
         keywordStrategy.put("secondary_keywords", secondaryKeywords);
         keywordStrategy.put("long_tail_keywords", longTailKeywords);
 
+        log.info("Generated keyword strategy for product: {}, audience: {}, keywords count: {}",
+                product, audience,
+                primaryKeywords.size() + secondaryKeywords.size() + longTailKeywords.size());
         return keywordStrategy;
     }
 
@@ -133,6 +142,8 @@ public class SeoStrategyTool extends BaseMarketingTool {
                 "Maintain consistent brand voice: " + (brandVoice != null ? brandVoice : "Professional")
         ));
 
+        log.info("Generated content plan for product: {}, audience: {}, brand voice: {}, content types count: {}",
+                product, audience, brandVoice, contentTypes.size());
         return contentPlan;
     }
 
