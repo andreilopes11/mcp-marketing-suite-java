@@ -26,6 +26,7 @@ mcp:
     supported-languages:
       - en
       - pt
+      - es
 
 # Enable all actuator endpoints for development
 management:

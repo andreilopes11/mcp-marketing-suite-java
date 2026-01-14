@@ -32,7 +32,7 @@ public class MarketingRequest {
     @NotEmpty(message = "At least one goal is required")
     private List<String> goals;
 
-    private String language; // Optional: en, pt
+    private String language; // Optional: en, pt, es
 
     private String competitors; // Optional
 

@@ -12,6 +12,11 @@ spring:
       write-dates-as-timestamps: false
     deserialization:
       fail-on-unknown-properties: false
+  main:
+    allow-bean-definition-overriding: true
+    banner-mode: CONSOLE
+  banner:
+    location: classpath:banner.txt
 
 mcp:
   marketing:
@@ -19,13 +24,14 @@ mcp:
       provider: openai
       api-key: ${OPENAI_API_KEY:}
       model: ${LLM_MODEL:gpt-4}
-      temperature: 0.7
+      temperature: 0.2
       max-tokens: 2000
     output-directory: ${OUTPUT_DIR:./outputs}
     enable-ai-agents: ${ENABLE_AI_AGENTS:true}
     supported-languages:
       - en
       - pt
+      - es
 
 springdoc:
   api-docs:

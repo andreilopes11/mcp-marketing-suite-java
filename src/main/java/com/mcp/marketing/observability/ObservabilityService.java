@@ -41,13 +41,11 @@ public class ObservabilityService {
         try {
             T result = operation.get();
             long duration = Duration.between(start, Instant.now()).toMillis();
-            log.info("Completed operation: {} in {}ms [request_id={}]",
-                operationName, duration, requestId);
+            log.info("Completed operation: {} in {}ms [request_id={}]", operationName, duration, requestId);
             return result;
         } catch (Exception e) {
             long duration = Duration.between(start, Instant.now()).toMillis();
-            log.error("Failed operation: {} after {}ms [request_id={}]",
-                operationName, duration, requestId, e);
+            log.error("Failed operation: {} after {}ms [request_id={}]", operationName, duration, requestId, e);
             throw e;
         }
     }
@@ -61,12 +59,10 @@ public class ObservabilityService {
         try {
             operation.run();
             long duration = Duration.between(start, Instant.now()).toMillis();
-            log.info("Completed operation: {} in {}ms [request_id={}]",
-                operationName, duration, requestId);
+            log.info("Completed operation: {} in {}ms [request_id={}]", operationName, duration, requestId);
         } catch (Exception e) {
             long duration = Duration.between(start, Instant.now()).toMillis();
-            log.error("Failed operation: {} after {}ms [request_id={}]",
-                operationName, duration, requestId, e);
+            log.error("Failed operation: {} after {}ms [request_id={}]", operationName, duration, requestId, e);
             throw e;
         }
     }

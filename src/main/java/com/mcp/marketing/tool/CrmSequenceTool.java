@@ -28,11 +28,11 @@ public class CrmSequenceTool {
     private final ObjectMapper objectMapper;
 
     public Map<String, Object> generateCrmSequence(
-        String product,
-        String audience,
-        String brandVoice,
-        List<String> goals
-    ) {
+            String product,
+            String audience,
+            String brandVoice,
+            List<String> goals) {
+
         return observability.traceOperation("generate_crm_sequence", () -> {
             Map<String, Object> result = new HashMap<>();
 
@@ -52,102 +52,102 @@ public class CrmSequenceTool {
     }
 
     private List<Map<String, Object>> generateEmailSequence(
-        String product,
-        String audience,
-        String brandVoice,
-        List<String> goals
-    ) {
+            String product,
+            String audience,
+            String brandVoice,
+            List<String> goals) {
+
         List<Map<String, Object>> emails = new ArrayList<>();
 
         // Email 1: Welcome
         emails.add(createEmail(
-            1,
-            "Welcome to " + product,
-            String.format("Hi {First Name},\n\nWelcome to %s! We're excited to have you join our community of %s.\n\n" +
-                "Here's what you can expect:\n" +
-                "• Exclusive insights and tips\n" +
-                "• Early access to new features\n" +
-                "• Dedicated support from our team\n\n" +
-                "Let's get started on your journey to %s!\n\nBest regards,\nThe %s Team",
-                product, audience, goals.get(0), product),
-            "Get Started",
-            "https://example.com/getting-started"
+                1,
+                "Welcome to " + product,
+                String.format("Hi {First Name},\n\nWelcome to %s! We're excited to have you join our community of %s.\n\n" +
+                                "Here's what you can expect:\n" +
+                                "• Exclusive insights and tips\n" +
+                                "• Early access to new features\n" +
+                                "• Dedicated support from our team\n\n" +
+                                "Let's get started on your journey to %s!\n\nBest regards,\nThe %s Team",
+                        product, audience, goals.get(0), product),
+                "Get Started",
+                "https://example.com/getting-started"
         ));
 
         // Email 2: Education
         emails.add(createEmail(
-            2,
-            "How " + product + " Helps " + audience,
-            String.format("Hi {First Name},\n\nWe wanted to share how other %s are using %s to achieve amazing results.\n\n" +
-                "Case Study: Company X increased their %s by 150%% in just 3 months.\n\n" +
-                "Key strategies they used:\n" +
-                "1. Strategy A\n" +
-                "2. Strategy B\n" +
-                "3. Strategy C\n\n" +
-                "Want to replicate their success? Let's talk!\n\nBest regards,\nThe %s Team",
-                audience, product, goals.get(0), product),
-            "Learn More",
-            "https://example.com/case-studies"
+                2,
+                "How " + product + " Helps " + audience,
+                String.format("Hi {First Name},\n\nWe wanted to share how other %s are using %s to achieve amazing results.\n\n" +
+                                "Case Study: Company X increased their %s by 150%% in just 3 months.\n\n" +
+                                "Key strategies they used:\n" +
+                                "1. Strategy A\n" +
+                                "2. Strategy B\n" +
+                                "3. Strategy C\n\n" +
+                                "Want to replicate their success? Let's talk!\n\nBest regards,\nThe %s Team",
+                        audience, product, goals.get(0), product),
+                "Learn More",
+                "https://example.com/case-studies"
         ));
 
         // Email 3: Social Proof
         emails.add(createEmail(
-            3,
-            "Join 10,000+ " + audience + " Using " + product,
-            String.format("Hi {First Name},\n\nDid you know that over 10,000 %s trust %s?\n\n" +
-                "Here's what they're saying:\n" +
-                "⭐⭐⭐⭐⭐ \"Game-changer for our team!\" - Sarah J.\n" +
-                "⭐⭐⭐⭐⭐ \"Best investment we've made\" - Mike T.\n" +
-                "⭐⭐⭐⭐⭐ \"Results exceeded expectations\" - Lisa K.\n\n" +
-                "Ready to experience the difference?\n\nBest regards,\nThe %s Team",
-                audience, product, product),
-            "Start Free Trial",
-            "https://example.com/trial"
+                3,
+                "Join 10,000+ " + audience + " Using " + product,
+                String.format("Hi {First Name},\n\nDid you know that over 10,000 %s trust %s?\n\n" +
+                                "Here's what they're saying:\n" +
+                                "⭐⭐⭐⭐⭐ \"Game-changer for our team!\" - Sarah J.\n" +
+                                "⭐⭐⭐⭐⭐ \"Best investment we've made\" - Mike T.\n" +
+                                "⭐⭐⭐⭐⭐ \"Results exceeded expectations\" - Lisa K.\n\n" +
+                                "Ready to experience the difference?\n\nBest regards,\nThe %s Team",
+                        audience, product, product),
+                "Start Free Trial",
+                "https://example.com/trial"
         ));
 
         // Email 4: Offer
         emails.add(createEmail(
-            4,
-            "Special Offer: 20%% Off for " + audience,
-            String.format("Hi {First Name},\n\nAs a valued member of our %s community, we have a special offer just for you.\n\n" +
-                "Get 20%% off your first 3 months when you upgrade today!\n\n" +
-                "This exclusive offer includes:\n" +
-                "✓ Full access to all features\n" +
-                "✓ Priority support\n" +
-                "✓ Custom onboarding session\n" +
-                "✓ 30-day money-back guarantee\n\n" +
-                "Offer expires in 48 hours. Don't miss out!\n\nBest regards,\nThe %s Team",
-                audience, product),
-            "Claim Offer",
-            "https://example.com/special-offer"
+                4,
+                "Special Offer: 20%% Off for " + audience,
+                String.format("Hi {First Name},\n\nAs a valued member of our %s community, we have a special offer just for you.\n\n" +
+                                "Get 20%% off your first 3 months when you upgrade today!\n\n" +
+                                "This exclusive offer includes:\n" +
+                                "✓ Full access to all features\n" +
+                                "✓ Priority support\n" +
+                                "✓ Custom onboarding session\n" +
+                                "✓ 30-day money-back guarantee\n\n" +
+                                "Offer expires in 48 hours. Don't miss out!\n\nBest regards,\nThe %s Team",
+                        audience, product),
+                "Claim Offer",
+                "https://example.com/special-offer"
         ));
 
         // Email 5: Re-engagement
         emails.add(createEmail(
-            5,
-            "We Miss You! Here's What You've Been Missing",
-            String.format("Hi {First Name},\n\nWe noticed you haven't been active lately, and we wanted to check in.\n\n" +
-                "Here's what's new at %s:\n" +
-                "• New feature X launched\n" +
-                "• Updated %s resources\n" +
-                "• Community events and webinars\n\n" +
-                "We'd love to help you achieve your goals of %s.\n\n" +
-                "Can we schedule a quick call to discuss your needs?\n\nBest regards,\nThe %s Team",
-                product, audience, String.join(", ", goals), product),
-            "Reconnect",
-            "https://example.com/schedule-call"
+                5,
+                "We Miss You! Here's What You've Been Missing",
+                String.format("Hi {First Name},\n\nWe noticed you haven't been active lately, and we wanted to check in.\n\n" +
+                                "Here's what's new at %s:\n" +
+                                "• New feature X launched\n" +
+                                "• Updated %s resources\n" +
+                                "• Community events and webinars\n\n" +
+                                "We'd love to help you achieve your goals of %s.\n\n" +
+                                "Can we schedule a quick call to discuss your needs?\n\nBest regards,\nThe %s Team",
+                        product, audience, String.join(", ", goals), product),
+                "Reconnect",
+                "https://example.com/schedule-call"
         ));
 
         return emails;
     }
 
     private Map<String, Object> createEmail(
-        int sequence,
-        String subject,
-        String body,
-        String ctaText,
-        String ctaLink
-    ) {
+            int sequence,
+            String subject,
+            String body,
+            String ctaText,
+            String ctaLink) {
+
         Map<String, Object> email = new HashMap<>();
         email.put("sequence_number", sequence);
         email.put("subject_line", subject);

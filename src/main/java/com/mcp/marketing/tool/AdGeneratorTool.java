@@ -7,14 +7,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Tool for generating advertising creative and copy
@@ -29,11 +31,11 @@ public class AdGeneratorTool {
     private final ObjectMapper objectMapper;
 
     public Map<String, Object> generateAds(
-        String product,
-        String audience,
-        String brandVoice,
-        List<String> goals
-    ) {
+            String product,
+            String audience,
+            String brandVoice,
+            List<String> goals) {
+
         return observability.traceOperation("generate_ads", () -> {
             Map<String, Object> result = new HashMap<>();
 
@@ -54,23 +56,23 @@ public class AdGeneratorTool {
     }
 
     private Map<String, Object> generateGoogleAds(
-        String product,
-        String audience,
-        String brandVoice,
-        List<String> goals
-    ) {
+            String product,
+            String audience,
+            String brandVoice,
+            List<String> goals) {
+
         Map<String, Object> googleAds = new HashMap<>();
 
         // Responsive Search Ads
         List<Map<String, String>> headlines = Arrays.asList(
-            Map.of("text", product + " - Transform Your Business", "length", "30"),
-            Map.of("text", "Get Started with " + product, "length", "25"),
-            Map.of("text", "Trusted by " + audience, "length", "20")
+                Map.of("text", product + " - Transform Your Business", "length", "30"),
+                Map.of("text", "Get Started with " + product, "length", "25"),
+                Map.of("text", "Trusted by " + audience, "length", "20")
         );
 
         List<Map<String, String>> descriptions = Arrays.asList(
-            Map.of("text", "Achieve " + String.join(", ", goals) + " with our proven solution.", "length", "90"),
-            Map.of("text", "Join thousands of satisfied customers. Start your free trial today.", "length", "90")
+                Map.of("text", "Achieve " + String.join(", ", goals) + " with our proven solution.", "length", "90"),
+                Map.of("text", "Join thousands of satisfied customers. Start your free trial today.", "length", "90")
         );
 
         googleAds.put("headlines", headlines);
@@ -82,17 +84,17 @@ public class AdGeneratorTool {
     }
 
     private Map<String, Object> generateMetaAds(
-        String product,
-        String audience,
-        String brandVoice,
-        List<String> goals
-    ) {
+            String product,
+            String audience,
+            String brandVoice,
+            List<String> goals) {
+
         Map<String, Object> metaAds = new HashMap<>();
 
         metaAds.put("primary_text", String.format(
-            "Attention %s! 🚀 Discover how %s can help you achieve %s. " +
-            "Join the revolution today!",
-            audience, product, goals.get(0)
+                "Attention %s! 🚀 Discover how %s can help you achieve %s. " +
+                        "Join the revolution today!",
+                audience, product, goals.get(0)
         ));
 
         metaAds.put("headline", product + " - Your Success Partner");
@@ -104,17 +106,17 @@ public class AdGeneratorTool {
     }
 
     private Map<String, Object> generateLinkedInAds(
-        String product,
-        String audience,
-        String brandVoice,
-        List<String> goals
-    ) {
+            String product,
+            String audience,
+            String brandVoice,
+            List<String> goals) {
+
         Map<String, Object> linkedInAds = new HashMap<>();
 
         linkedInAds.put("introductory_text", String.format(
-            "%s professionals are using %s to drive results. " +
-            "Discover how our solution can help you %s.",
-            audience, product, String.join(" and ", goals).toLowerCase()
+                "%s professionals are using %s to drive results. " +
+                        "Discover how our solution can help you %s.",
+                audience, product, String.join(" and ", goals).toLowerCase()
         ));
 
         linkedInAds.put("headline", "Enterprise Solution for " + audience);
@@ -136,10 +138,10 @@ public class AdGeneratorTool {
 
     private List<String> generateRecommendations(Map<String, Object> ads) {
         return Arrays.asList(
-            "Test multiple headline variations to optimize CTR",
-            "Consider adding emotional triggers to increase engagement",
-            "A/B test different CTAs to improve conversion rates",
-            "Ensure landing page messaging aligns with ad copy"
+                "Test multiple headline variations to optimize CTR",
+                "Consider adding emotional triggers to increase engagement",
+                "A/B test different CTAs to improve conversion rates",
+                "Ensure landing page messaging aligns with ad copy"
         );
     }
 

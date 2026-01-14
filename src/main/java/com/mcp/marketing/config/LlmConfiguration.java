@@ -22,10 +22,10 @@ public class LlmConfiguration {
 
     @Bean
     @ConditionalOnProperty(
-        prefix = "mcp.marketing",
-        name = "enable-ai-agents",
-        havingValue = "true",
-        matchIfMissing = true
+            prefix = "mcp.marketing",
+            name = "enable-ai-agents",
+            havingValue = "true",
+            matchIfMissing = true
     )
     public ChatLanguageModel chatLanguageModel() {
         String apiKey = properties.getLlm().getApiKey();
@@ -38,14 +38,14 @@ public class LlmConfiguration {
         log.info("Initializing OpenAI Chat Model: {}", properties.getLlm().getModel());
 
         return OpenAiChatModel.builder()
-            .apiKey(apiKey)
-            .modelName(properties.getLlm().getModel())
-            .temperature(properties.getLlm().getTemperature())
-            .maxTokens(properties.getLlm().getMaxTokens())
-            .timeout(Duration.ofSeconds(60))
-            .logRequests(true)
-            .logResponses(true)
-            .build();
+                .apiKey(apiKey)
+                .modelName(properties.getLlm().getModel())
+                .temperature(properties.getLlm().getTemperature())
+                .maxTokens(properties.getLlm().getMaxTokens())
+                .timeout(Duration.ofSeconds(60))
+                .logRequests(true)
+                .logResponses(true)
+                .build();
     }
 }
 

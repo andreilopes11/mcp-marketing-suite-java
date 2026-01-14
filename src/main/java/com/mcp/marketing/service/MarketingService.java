@@ -47,10 +47,10 @@ public class MarketingService {
 
             // Generate ads using tools
             Map<String, Object> ads = adGeneratorTool.generateAds(
-                request.getProduct(),
-                request.getAudience(),
-                request.getBrandVoice(),
-                request.getGoals()
+                    request.getProduct(),
+                    request.getAudience(),
+                    request.getBrandVoice(),
+                    request.getGoals()
             );
 
             // Enhance with AI if enabled
@@ -61,26 +61,26 @@ public class MarketingService {
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("success")
-                .data(ads)
-                .outputPath((String) ads.get("output_file"))
-                .timestamp(LocalDateTime.now())
-                .message("Ads generated successfully")
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("success")
+                    .data(ads)
+                    .outputPath((String) ads.get("output_file"))
+                    .timestamp(LocalDateTime.now())
+                    .message("Ads generated successfully")
+                    .executionTimeMs(executionTime)
+                    .build();
 
         } catch (Exception e) {
             log.error("Error generating ads", e);
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("error")
-                .timestamp(LocalDateTime.now())
-                .message("Failed to generate ads: " + e.getMessage())
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("error")
+                    .timestamp(LocalDateTime.now())
+                    .message("Failed to generate ads: " + e.getMessage())
+                    .executionTimeMs(executionTime)
+                    .build();
         } finally {
             observability.clearRequestId();
         }
@@ -100,35 +100,35 @@ public class MarketingService {
 
             // Generate CRM sequence
             Map<String, Object> sequence = crmSequenceTool.generateCrmSequence(
-                request.getProduct(),
-                request.getAudience(),
-                request.getBrandVoice(),
-                request.getGoals()
+                    request.getProduct(),
+                    request.getAudience(),
+                    request.getBrandVoice(),
+                    request.getGoals()
             );
 
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("success")
-                .data(sequence)
-                .outputPath((String) sequence.get("output_file"))
-                .timestamp(LocalDateTime.now())
-                .message("CRM sequence generated successfully")
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("success")
+                    .data(sequence)
+                    .outputPath((String) sequence.get("output_file"))
+                    .timestamp(LocalDateTime.now())
+                    .message("CRM sequence generated successfully")
+                    .executionTimeMs(executionTime)
+                    .build();
 
         } catch (Exception e) {
             log.error("Error generating CRM sequence", e);
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("error")
-                .timestamp(LocalDateTime.now())
-                .message("Failed to generate CRM sequence: " + e.getMessage())
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("error")
+                    .timestamp(LocalDateTime.now())
+                    .message("Failed to generate CRM sequence: " + e.getMessage())
+                    .executionTimeMs(executionTime)
+                    .build();
         } finally {
             observability.clearRequestId();
         }
@@ -149,35 +149,35 @@ public class MarketingService {
 
             // Generate SEO strategy
             Map<String, Object> strategy = seoStrategyTool.generateSeoStrategy(
-                request.getProduct(),
-                request.getAudience(),
-                request.getBrandVoice(),
-                request.getGoals()
+                    request.getProduct(),
+                    request.getAudience(),
+                    request.getBrandVoice(),
+                    request.getGoals()
             );
 
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("success")
-                .data(strategy)
-                .outputPath((String) strategy.get("output_file"))
-                .timestamp(LocalDateTime.now())
-                .message("SEO strategy generated successfully")
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("success")
+                    .data(strategy)
+                    .outputPath((String) strategy.get("output_file"))
+                    .timestamp(LocalDateTime.now())
+                    .message("SEO strategy generated successfully")
+                    .executionTimeMs(executionTime)
+                    .build();
 
         } catch (Exception e) {
             log.error("Error generating SEO strategy", e);
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("error")
-                .timestamp(LocalDateTime.now())
-                .message("Failed to generate SEO strategy: " + e.getMessage())
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("error")
+                    .timestamp(LocalDateTime.now())
+                    .message("Failed to generate SEO strategy: " + e.getMessage())
+                    .executionTimeMs(executionTime)
+                    .build();
         } finally {
             observability.clearRequestId();
         }
@@ -195,48 +195,48 @@ public class MarketingService {
 
             // Generate all components
             fullStrategy.put("ads", adGeneratorTool.generateAds(
-                request.getProduct(),
-                request.getAudience(),
-                request.getBrandVoice(),
-                request.getGoals()
+                    request.getProduct(),
+                    request.getAudience(),
+                    request.getBrandVoice(),
+                    request.getGoals()
             ));
 
             fullStrategy.put("crm_sequence", crmSequenceTool.generateCrmSequence(
-                request.getProduct(),
-                request.getAudience(),
-                request.getBrandVoice(),
-                request.getGoals()
+                    request.getProduct(),
+                    request.getAudience(),
+                    request.getBrandVoice(),
+                    request.getGoals()
             ));
 
             fullStrategy.put("seo_strategy", seoStrategyTool.generateSeoStrategy(
-                request.getProduct(),
-                request.getAudience(),
-                request.getBrandVoice(),
-                request.getGoals()
+                    request.getProduct(),
+                    request.getAudience(),
+                    request.getBrandVoice(),
+                    request.getGoals()
             ));
 
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("success")
-                .data(fullStrategy)
-                .timestamp(LocalDateTime.now())
-                .message("Full GTM strategy generated successfully")
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("success")
+                    .data(fullStrategy)
+                    .timestamp(LocalDateTime.now())
+                    .message("Full GTM strategy generated successfully")
+                    .executionTimeMs(executionTime)
+                    .build();
 
         } catch (Exception e) {
             log.error("Error generating full strategy", e);
             long executionTime = System.currentTimeMillis() - startTime;
 
             return MarketingResponse.builder()
-                .requestId(requestId)
-                .status("error")
-                .timestamp(LocalDateTime.now())
-                .message("Failed to generate full strategy: " + e.getMessage())
-                .executionTimeMs(executionTime)
-                .build();
+                    .requestId(requestId)
+                    .status("error")
+                    .timestamp(LocalDateTime.now())
+                    .message("Failed to generate full strategy: " + e.getMessage())
+                    .executionTimeMs(executionTime)
+                    .build();
         } finally {
             observability.clearRequestId();
         }
