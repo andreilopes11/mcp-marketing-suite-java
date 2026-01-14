@@ -1,8 +1,8 @@
 package com.mcp.marketing.tool;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcp.marketing.config.MarketingProperties;
 import com.mcp.marketing.observability.ObservabilityService;
+import com.mcp.marketing.service.OutputService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -22,8 +22,8 @@ public class SeoStrategyTool extends BaseMarketingTool {
     public SeoStrategyTool(
             MarketingProperties properties,
             ObservabilityService observability,
-            ObjectMapper objectMapper) {
-        super(properties, observability, objectMapper);
+            OutputService outputService) {
+        super(properties, observability, outputService);
     }
 
     public Map<String, Object> generateSeoStrategy(
