@@ -44,7 +44,7 @@ public class SeoStrategyTool extends BaseMarketingTool {
             result.put("brand_voice", brandVoice);
 
             // Save to file
-            String filePath = saveToFile(result, "seo_strategy");
+            String filePath = saveToFile(result, "seo");
             result.put("output_file", filePath);
 
             observability.logMetric("seo_strategy_generated", 1);

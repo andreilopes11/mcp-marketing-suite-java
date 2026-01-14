@@ -62,202 +62,173 @@ public class MarketingService {
 
     /**
      * Generate ads for multiple platforms
-     * Optimized: pre-loads resources in parallel with ad generation
+     * Optimized: reuses extracted logic for consistency
      */
     public MarketingResponse generateAds(MarketingRequest request) {
         validateRequest(request);
-
-        return executeWithObservability("ad generation", request, () -> {
-            // Pre-load resources asynchronously (cached, non-blocking)
-            CompletableFuture<Void> resourcesFuture = taskExecutor != null ? CompletableFuture.runAsync(() -> {
-                resourceProvider.getProduct(request.getProduct());
-                resourceProvider.getAudience(request.getAudience());
-                resourceProvider.getBrand(request.getBrandVoice());
-            }, taskExecutor) : CompletableFuture.completedFuture(null);
-
-            // Generate ads in parallel
-            Map<String, Object> ads = adGeneratorTool.generateAds(
-                    request.getProduct(),
-                    request.getAudience(),
-                    request.getBrandVoice(),
-                    request.getGoals()
-            );
-
-            // Wait for resources to be cached (for future requests)
-            resourcesFuture.join();
-
-            // Enhance with AI if enabled
-            log.info("Checking if AI enhancement is enabled for ads: {}", ads);
-            return maybeEnhanceWithAI(ads, request);
-        });
+        return executeWithObservability("Ads generation", request, () -> generateAdsData(request));
     }
 
     /**
      * Generate CRM email sequence
-     * Optimized: uses cached resources
+     * Optimized: reuses extracted logic for consistency
      */
     public MarketingResponse generateCrmSequence(MarketingRequest request) {
         validateRequest(request);
-
-        return executeWithObservability("CRM sequence generation", request, () -> {
-            // Pre-load resources (cached)
-            resourceProvider.getProduct(request.getProduct());
-            resourceProvider.getAudience(request.getAudience());
-
-            log.info("Generating CRM sequence for product: {}", request.getProduct());
-            log.info("Audience segment: {}", request.getAudience());
-            return crmSequenceTool.generateCrmSequence(
-                    request.getProduct(),
-                    request.getAudience(),
-                    request.getBrandVoice(),
-                    request.getGoals()
-            );
-        });
+        return executeWithObservability("CRM sequence generation", request, () -> generateCrmData(request));
     }
 
     /**
      * Generate SEO strategy
-     * Optimized: includes competitor analysis
+     * Optimized: reuses extracted logic for consistency
      */
     public MarketingResponse generateSeoStrategy(MarketingRequest request) {
         validateRequest(request);
-        return executeWithObservability("SEO strategy generation", request, () -> {
-            // Pre-load all relevant resources
-            resourceProvider.getProduct(request.getProduct());
-            resourceProvider.getAudience(request.getAudience());
-            if (request.getCompetitors() != null && !request.getCompetitors().isEmpty()) {
-                resourceProvider.getCompetitors(request.getCompetitors());
-            }
-
-            log.info("Generating SEO strategy for product: {}", request.getProduct());
-            log.info("Including competitor analysis for: {}", request.getCompetitors());
-            return seoStrategyTool.generateSeoStrategy(
-                    request.getProduct(),
-                    request.getAudience(),
-                    request.getBrandVoice(),
-                    request.getGoals()
-            );
-        });
+        return executeWithObservability("SEO strategy generation", request, () -> generateSeoData(request));
     }
 
     /**
      * Generate full GTM strategy with all components
-     * Optimized: parallel execution with configured thread pool + resource pre-loading
+     * Optimized: reuses existing service methods with parallel execution
      */
     public MarketingResponse generateFullStrategy(MarketingRequest request) {
-        return executeWithObservability("full GTM strategy generation", request, () -> {
-            Map<String, Object> fullStrategy = new HashMap<>();
+        validateRequest(request);
 
-            // Capture the current request ID for use in async threads
-            String requestId = observability.getCurrentRequestId();
+        String requestId = observability.generateRequestId();
+        observability.setRequestId(requestId);
+        long startTime = System.currentTimeMillis();
 
-            // Pre-load all resources in parallel (will be cached)
-            CompletableFuture<Void> resourcePreload = taskExecutor != null ? CompletableFuture.runAsync(() -> {
-                observability.setRequestId(requestId); // Set request ID in async thread
-                try {
-                    resourceProvider.getProduct(request.getProduct());
-                    resourceProvider.getAudience(request.getAudience());
-                    resourceProvider.getBrand(request.getBrandVoice());
-                    if (request.getCompetitors() != null && !request.getCompetitors().isEmpty()) {
-                        resourceProvider.getCompetitors(request.getCompetitors());
-                    }
-                } finally {
-                    observability.clearRequestId();
-                }
-            }, taskExecutor) : CompletableFuture.completedFuture(null);
+        try {
+            log.info("Processing full GTM strategy generation request: {}", request);
 
             // Parallel execution with configured executor for better performance
             Executor executor = taskExecutor != null ? taskExecutor : Runnable::run;
 
-            CompletableFuture<Map<String, Object>> adsFuture = CompletableFuture.supplyAsync(() -> {
-                observability.setRequestId(requestId); // Set request ID in async thread
-                try {
-                    log.info("Generating ads as part of full strategy for product: {}", request.getProduct());
-                    log.info("Audience segment: {}", request.getAudience());
-                    log.info("Brand voice: {}", request.getBrandVoice());
-                    log.info("Marketing goals: {}", request.getGoals());
-                    return adGeneratorTool.generateAds(
-                            request.getProduct(),
-                            request.getAudience(),
-                            request.getBrandVoice(),
-                            request.getGoals()
-                    );
-                } catch (Exception e) {
-                    log.error("Error generating ads in full strategy", e);
-                    return Map.of("error", "Failed to generate ads: " + e.getMessage());
-                } finally {
-                    observability.clearRequestId();
-                }
-            }, executor);
+            // Execute all components in parallel by reusing existing service logic
+            CompletableFuture<Map<String, Object>> adsFuture = CompletableFuture.supplyAsync(() ->
+                    executeComponentWithRequestId(requestId, "Ads generation", () -> generateAdsData(request)), executor);
 
-            CompletableFuture<Map<String, Object>> crmFuture = CompletableFuture.supplyAsync(() -> {
-                observability.setRequestId(requestId); // Set request ID in async thread
-                try {
-                    log.info("Generating CRM sequence as part of full strategy for product: {}", request.getProduct());
-                    log.info("Audience segment: {}", request.getAudience());
-                    log.info("Brand voice: {}", request.getBrandVoice());
-                    log.info("Marketing goals: {}", request.getGoals());
-                    return crmSequenceTool.generateCrmSequence(
-                            request.getProduct(),
-                            request.getAudience(),
-                            request.getBrandVoice(),
-                            request.getGoals()
-                    );
-                } catch (Exception e) {
-                    log.error("Error generating CRM sequence in full strategy", e);
-                    return Map.of("error", "Failed to generate CRM sequence: " + e.getMessage());
-                } finally {
-                    observability.clearRequestId();
-                }
-            }, executor);
+            CompletableFuture<Map<String, Object>> crmFuture = CompletableFuture.supplyAsync(() ->
+                    executeComponentWithRequestId(requestId, "CRM sequence generation", () -> generateCrmData(request)), executor);
 
-            CompletableFuture<Map<String, Object>> seoFuture = CompletableFuture.supplyAsync(() -> {
-                observability.setRequestId(requestId); // Set request ID in async thread
-                try {
-                    log.info("Generating SEO strategy as part of full strategy for product: {}", request.getProduct());
-                    log.info("Audience segment: {}", request.getAudience());
-                    log.info("Brand voice: {}", request.getBrandVoice());
-                    log.info("Marketing goals: {}", request.getGoals());
-                    return seoStrategyTool.generateSeoStrategy(
-                            request.getProduct(),
-                            request.getAudience(),
-                            request.getBrandVoice(),
-                            request.getGoals()
-                    );
-                } catch (Exception e) {
-                    log.error("Error generating SEO strategy in full strategy", e);
-                    return Map.of("error", "Failed to generate SEO strategy: " + e.getMessage());
-                } finally {
-                    observability.clearRequestId();
-                }
-            }, executor);
-
-            // Wait for resources to be cached
-            resourcePreload.join();
+            CompletableFuture<Map<String, Object>> seoFuture = CompletableFuture.supplyAsync(() ->
+                    executeComponentWithRequestId(requestId, "SEO strategy generation", () -> generateSeoData(request)), executor);
 
             // Wait for all tasks to complete
             CompletableFuture.allOf(adsFuture, crmFuture, seoFuture).join();
 
             // Collect results
-            fullStrategy.put("ads", adsFuture.join());
-            fullStrategy.put("crm_sequence", crmFuture.join());
+            Map<String, Object> fullStrategy = new HashMap<>();
+            fullStrategy.put("ads_strategy", adsFuture.join());
+            fullStrategy.put("crm_strategy", crmFuture.join());
             fullStrategy.put("seo_strategy", seoFuture.join());
 
             // Add metadata
-            fullStrategy.put("generated_at", java.time.LocalDateTime.now().toString());
+            fullStrategy.put("generated_at", LocalDateTime.now().toString());
             fullStrategy.put("request_context", Map.of(
                     "product", request.getProduct(),
                     "audience", request.getAudience(),
                     "goals", request.getGoals()
             ));
 
+            long executionTime = System.currentTimeMillis() - startTime;
             log.info("Full GTM strategy generated successfully for product: {}, audience: {}, goals: {}",
-                    request.getProduct(),
-                    request.getAudience(),
-                    request.getGoals()
-            );
-            return fullStrategy;
-        });
+                    request.getProduct(), request.getAudience(), request.getGoals());
+
+            return buildSuccessResponse(requestId, fullStrategy, "full GTM strategy generation", executionTime);
+
+        } catch (Exception e) {
+            log.error("Error in full GTM strategy generation: {}", e.getMessage(), e);
+            long executionTime = System.currentTimeMillis() - startTime;
+            return buildErrorResponse(requestId, "full GTM strategy generation", e.getMessage(), executionTime);
+
+        } finally {
+            observability.clearRequestId();
+        }
+    }
+
+    /**
+     * Execute a component with proper request ID context in async threads
+     */
+    private Map<String, Object> executeComponentWithRequestId(
+            String requestId,
+            String componentName,
+            Supplier<Map<String, Object>> supplier) {
+        observability.setRequestId(requestId);
+        try {
+            log.info("Generating {} as part of full strategy", componentName);
+            return supplier.get();
+        } catch (Exception e) {
+            log.error("Error generating {} in full strategy", componentName, e);
+            return Map.of("error", "Failed to generate " + componentName + ": " + e.getMessage());
+        } finally {
+            observability.clearRequestId();
+        }
+    }
+
+    /**
+     * Generate ads data - extracted logic from generateAds() for reuse
+     */
+    private Map<String, Object> generateAdsData(MarketingRequest request) {
+        // Pre-load resources asynchronously (cached, non-blocking)
+        CompletableFuture<Void> resourcesFuture = taskExecutor != null ? CompletableFuture.runAsync(() -> {
+            resourceProvider.getProduct(request.getProduct());
+            resourceProvider.getAudience(request.getAudience());
+            resourceProvider.getBrand(request.getBrandVoice());
+        }, taskExecutor) : CompletableFuture.completedFuture(null);
+
+        // Generate ads
+        Map<String, Object> ads = adGeneratorTool.generateAds(
+                request.getProduct(),
+                request.getAudience(),
+                request.getBrandVoice(),
+                request.getGoals()
+        );
+
+        // Wait for resources to be cached (for future requests)
+        resourcesFuture.join();
+
+        // Enhance with AI if enabled
+        return maybeEnhanceWithAI(ads, request);
+    }
+
+    /**
+     * Generate CRM data - extracted logic from generateCrmSequence() for reuse
+     */
+    private Map<String, Object> generateCrmData(MarketingRequest request) {
+        // Pre-load resources (cached)
+        resourceProvider.getProduct(request.getProduct());
+        resourceProvider.getAudience(request.getAudience());
+
+        log.info("Generating CRM sequence for product: {}, audience: {}, Brand Voice: {}, goals: {}",
+                request.getProduct(), request.getAudience(), request.getBrandVoice(), request.getGoals());
+        return crmSequenceTool.generateCrmSequence(
+                request.getProduct(),
+                request.getAudience(),
+                request.getBrandVoice(),
+                request.getGoals()
+        );
+    }
+
+    /**
+     * Generate SEO data - extracted logic from generateSeoStrategy() for reuse
+     */
+    private Map<String, Object> generateSeoData(MarketingRequest request) {
+        // Pre-load all relevant resources
+        resourceProvider.getProduct(request.getProduct());
+        resourceProvider.getAudience(request.getAudience());
+        if (request.getCompetitors() != null && !request.getCompetitors().isEmpty()) {
+            resourceProvider.getCompetitors(request.getCompetitors());
+        }
+
+        log.info("Generating SEO strategy for product: {}, audience: {}, Brand Voice: {}, goals: {}",
+                request.getProduct(), request.getAudience(), request.getBrandVoice(), request.getGoals());
+        return seoStrategyTool.generateSeoStrategy(
+                request.getProduct(),
+                request.getAudience(),
+                request.getBrandVoice(),
+                request.getGoals()
+        );
     }
 
     /**

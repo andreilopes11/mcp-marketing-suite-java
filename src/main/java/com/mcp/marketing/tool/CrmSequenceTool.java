@@ -39,7 +39,7 @@ public class CrmSequenceTool extends BaseMarketingTool {
             result.put("success_metrics", generateSuccessMetrics());
 
             // Save to file
-            String filePath = saveToFile(result, "crm_sequence");
+            String filePath = saveToFile(result, "crm");
             result.put("output_file", filePath);
 
             observability.logMetric("crm_emails_generated", 5);

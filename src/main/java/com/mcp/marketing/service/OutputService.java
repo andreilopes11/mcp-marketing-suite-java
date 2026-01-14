@@ -87,7 +87,6 @@ public class OutputService {
             case "ads", "ad-generation" -> "ads";
             case "crm-sequences", "crm-sequence", "crm" -> "crm";
             case "seo-plan", "seo-strategy", "seo" -> "seo";
-            case "strategy", "full-strategy", "gtm-strategy" -> "strategy";
             default -> {
                 log.warn("Unknown content type '{}', saving to 'others' folder", contentType);
                 yield "others";
@@ -111,7 +110,7 @@ public class OutputService {
      * Creates all necessary subdirectories
      */
     public void initializeOutputDirectories() {
-        String[] directories = {"ads", "crm", "seo", "strategy", "others"};
+        String[] directories = {"ads", "crm", "seo", "others"};
 
         for (String dir : directories) {
             try {
