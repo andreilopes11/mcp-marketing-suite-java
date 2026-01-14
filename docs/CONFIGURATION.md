@@ -1,134 +1,75 @@
 # Configuration Guide
 
-This guide explains how to configure the MCP Marketing Suite Java application using Spring Boot's standard configuration mechanisms.
+Complete guide for configuring MCP Marketing Suite using Spring Boot conventions.
 
-## Overview
+## Quick Start
 
-Unlike Node.js/Python projects that use `.env` files, Spring Boot applications use:
-- **application.yml** - Main configuration file
-- **Environment Variables** - For sensitive data and deployment-specific values
-- **Spring Profiles** - For environment-specific configurations
+### Set Environment Variables
+
+```bash
+# Linux/Mac/Git Bash
+export OPENAI_API_KEY="sk-your-api-key"
+export LLM_MODEL="gpt-4"
+
+# Windows CMD
+set OPENAI_API_KEY=sk-your-api-key
+set LLM_MODEL=gpt-4
+
+# Windows PowerShell
+$env:OPENAI_API_KEY="sk-your-api-key"
+$env:LLM_MODEL="gpt-4"
+```
+
+### Run Application
+
+```bash
+mvn spring-boot:run
+```
+
+---
 
 ## Environment Variables
 
-### Core Configuration
-
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | No* | - | OpenAI API key for AI-enhanced features |
-| `LLM_MODEL` | No | `gpt-4` | LLM model identifier |
-| `LLM_TEMPERATURE` | No | `0.7` | LLM temperature (0.0-1.0) |
-| `LLM_MAX_TOKENS` | No | `2000` | Maximum tokens per request |
-| `ENABLE_AI_AGENTS` | No | `true` | Enable/disable AI agent orchestration |
-| `OUTPUT_DIR` | No | `./outputs` | Directory for generated artifacts |
+| `OPENAI_API_KEY` | No* | - | OpenAI API key |
+| `LLM_MODEL` | No | `gpt-4` | Model identifier |
+| `ENABLE_AI_AGENTS` | No | `true` | Enable/disable AI |
+| `OUTPUT_DIR` | No | `./outputs` | Output directory |
 
 \* Required only if `ENABLE_AI_AGENTS=true`
 
-### How Spring Boot Reads Environment Variables
-
-Spring Boot automatically resolves `${VARIABLE_NAME:default}` placeholders in `application.yml`:
-
-```yaml
-mcp:
-  marketing:
-    llm:
-      api-key: ${OPENAI_API_KEY:}  # Reads from env, empty if not set
-      model: ${LLM_MODEL:gpt-4}    # Reads from env, defaults to gpt-4
-```
+---
 
 ## Configuration Methods
 
-### 1. Environment Variables (Recommended for Production)
+### 1. IDE Configuration (Development)
 
-**Linux/Mac/Git Bash:**
-```bash
-export OPENAI_API_KEY="sk-your-api-key"
-export LLM_MODEL="gpt-4"
-export ENABLE_AI_AGENTS="true"
-mvn spring-boot:run
-```
+**IntelliJ IDEA:**
+- Run → Edit Configurations → Environment Variables
+- Add: `OPENAI_API_KEY=sk-...;LLM_MODEL=gpt-4`
 
-**Windows CMD:**
-```cmd
-set OPENAI_API_KEY=sk-your-api-key
-set LLM_MODEL=gpt-4
-set ENABLE_AI_AGENTS=true
-mvn spring-boot:run
-```
-
-**Windows PowerShell:**
-```powershell
-$env:OPENAI_API_KEY="sk-your-api-key"
-$env:LLM_MODEL="gpt-4"
-$env:ENABLE_AI_AGENTS="true"
-mvn spring-boot:run
-```
-
-### 2. IDE Configuration (Recommended for Development)
-
-#### IntelliJ IDEA
-1. Open Run/Debug Configurations
-2. Select your Spring Boot application
-3. Add environment variables in "Environment Variables" field:
-   ```
-   OPENAI_API_KEY=sk-your-api-key;LLM_MODEL=gpt-4
-   ```
-
-#### Eclipse
-1. Run > Run Configurations
-2. Select your application
-3. Environment tab > Add variables
-
-#### VS Code
-Add to `.vscode/launch.json`:
+**VS Code:**
 ```json
 {
-  "configurations": [
-    {
-      "type": "java",
-      "name": "MCP Marketing Suite",
-      "request": "launch",
-      "mainClass": "com.mcp.marketing.McpMarketingApplication",
-      "env": {
-        "OPENAI_API_KEY": "sk-your-api-key",
-        "LLM_MODEL": "gpt-4"
-      }
+  "configurations": [{
+    "env": {
+      "OPENAI_API_KEY": "sk-...",
+      "LLM_MODEL": "gpt-4"
     }
-  ]
+  }]
 }
 ```
 
-### 3. Command Line Arguments
+### 2. Profile Configuration
 
-```bash
-mvn spring-boot:run -Dspring-boot.run.arguments="\
-  --mcp.marketing.llm.api-key=sk-your-api-key \
-  --mcp.marketing.llm.model=gpt-4 \
-  --mcp.marketing.enable-ai-agents=true"
-```
-
-Or when running the JAR:
-```bash
-java -jar target/mcp-marketing-suite-*.jar \
-  --mcp.marketing.llm.api-key=sk-your-api-key \
-  --mcp.marketing.llm.model=gpt-4
-```
-
-### 4. Profile-Specific Configuration (Development)
-
-Create `src/main/resources/application-dev.yml`:
+Create `application-dev.yml`:
 ```yaml
 mcp:
   marketing:
     llm:
-      api-key: "sk-your-dev-key"
-      model: "gpt-3.5-turbo"  # Cheaper for testing
-    enable-ai-agents: true
-    output-directory: "./dev-outputs"
-
-logging:
-  level:
-    com.mcp.marketing: TRACE
+      api-key: ${OPENAI_API_KEY:}
+      model: gpt-3.5-turbo  # Cheaper for dev
 ```
 
 Run with profile:
@@ -136,117 +77,180 @@ Run with profile:
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-### 5. Docker Configuration
+### 3. Command Line
 
-**docker-compose.yml:**
+```bash
+java -jar target/mcp-marketing-suite-*.jar \
+  --mcp.marketing.llm.api-key=sk-... \
+  --mcp.marketing.llm.model=gpt-4
+```
+
+### 4. Docker
+
 ```yaml
+# docker-compose.yml
 services:
-  mcp-marketing:
-    image: mcp-marketing-suite:latest
+  app:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LLM_MODEL=gpt-4
-      - ENABLE_AI_AGENTS=true
-      - OUTPUT_DIR=/app/outputs
-    volumes:
-      - ./outputs:/app/outputs
 ```
 
-Run with:
-```bash
-export OPENAI_API_KEY="sk-your-api-key"
-docker-compose up
+### 5. Kubernetes
+
+```yaml
+env:
+  - name: OPENAI_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: api-keys
+        key: openai
 ```
+
+---
+
+## Spring Boot vs Node.js/Python
+
+### Why No `.env` File?
+
+Spring Boot reads environment variables **natively** - no library needed.
+
+**Node.js/Python Pattern (NOT used here):**
+```
+.env file → dotenv library → process.env
+```
+
+**Spring Boot Pattern (USED here):**
+```
+Environment Variables → application.yml → @ConfigurationProperties
+```
+
+### Comparison
+
+| Feature | .env (Node/Python) | Spring Boot |
+|---------|-------------------|-------------|
+| Native Support | ❌ Needs library | ✅ Built-in |
+| Type Safety | ❌ Strings only | ✅ Typed classes |
+| Validation | ❌ Manual | ✅ @Validated |
+| Profiles | ❌ Multiple files | ✅ application-{profile}.yml |
+| Cloud Ready | ⚠️ Manual | ✅ Auto-configured |
+
+---
+
+## Configuration File
+
+`application.yml` uses placeholders:
+
+```yaml
+mcp:
+  marketing:
+    llm:
+      api-key: ${OPENAI_API_KEY:}      # From environment
+      model: ${LLM_MODEL:gpt-4}        # With default
+      temperature: 0.7                  # Fixed value
+    enable-ai-agents: ${ENABLE_AI_AGENTS:true}
+```
+
+---
 
 ## Security Best Practices
 
+### ✅ Do This
+- Use environment variables for secrets
+- Different keys for dev/staging/prod
+- Rotate API keys regularly
+- Use cloud secret managers (AWS Secrets Manager, Azure Key Vault)
+
 ### ❌ Never Do This
 ```yaml
-# Bad: Hardcoded API keys in application.yml
+# Bad: Hardcoded secrets
 mcp:
   marketing:
     llm:
-      api-key: "sk-hardcoded-key-12345"  # NEVER!
+      api-key: "sk-hardcoded-key"  # NEVER!
 ```
 
-### ✅ Always Do This
-```yaml
-# Good: Use environment variables
-mcp:
-  marketing:
-    llm:
-      api-key: ${OPENAI_API_KEY:}
+---
+
+## Troubleshooting
+
+### "API key not configured"
+
+Check if variable is set:
+```bash
+echo $OPENAI_API_KEY      # Linux/Mac
+echo %OPENAI_API_KEY%     # Windows CMD
+echo $env:OPENAI_API_KEY  # PowerShell
 ```
 
-### Additional Security Tips
+If not set:
+```bash
+export OPENAI_API_KEY="sk-..."  # Linux/Mac
+set OPENAI_API_KEY=sk-...       # Windows CMD
+$env:OPENAI_API_KEY="sk-..."    # PowerShell
+```
 
-1. **Never commit secrets** to version control
-2. **Use CI/CD secrets** for deployment (GitHub Secrets, AWS Secrets Manager, etc.)
-3. **Rotate API keys** regularly
-4. **Use different keys** for dev/staging/production
-5. **Restrict API key permissions** when possible
+### Variable not recognized
 
-## Running Without AI (Deterministic Mode)
+Restart terminal or run in same session:
+```bash
+export OPENAI_API_KEY="sk-..." && mvn spring-boot:run
+```
 
-If you don't have an API key or want to run in air-gapped environments:
+### Run without API key
 
+Disable AI agents:
 ```bash
 export ENABLE_AI_AGENTS=false
 mvn spring-boot:run
 ```
 
-The application will run with deterministic tools only (no LLM calls).
+---
 
-## Verifying Configuration
+## Validation Script
 
-### Check Environment Variables
+Use the provided script to validate configuration:
+
 ```bash
-# Linux/Mac/Git Bash
-echo $OPENAI_API_KEY
-
-# Windows CMD
-echo %OPENAI_API_KEY%
-
-# Windows PowerShell
-echo $env:OPENAI_API_KEY
+./check-config.sh
 ```
 
-### Check Spring Boot Configuration
-Once running, check the logs:
+Output:
 ```
-Initializing OpenAI Chat Model: gpt-4
+🔍 MCP Marketing Suite - Configuration Validation
+==================================================
+✓ OPENAI_API_KEY: SET (sk-proj...L4wA)
+✓ Java: INSTALLED (java version "17.0.x")
+✓ Maven: INSTALLED (Apache Maven 3.9.x)
+✓ application.yml: FOUND
+==================================================
+✓ Configuration is valid!
 ```
 
-Or if API key is missing:
-```
-OpenAI API key not configured. AI agents will not be available.
-```
+---
 
-### Health Check Endpoint
+## Migration from .env
+
+If migrating from Node.js/Python project:
+
+**Before:**
 ```bash
-curl http://localhost:8080/health
+# .env
+OPENAI_API_KEY=sk-abc123
 ```
 
-## Troubleshooting
+**After:**
+```bash
+# System environment
+export OPENAI_API_KEY="sk-abc123"
+```
 
-### "API key not configured"
-- Verify environment variable is set: `echo $OPENAI_API_KEY`
-- Check Spring Boot logs for property resolution
-- Ensure no typos in variable name
+The `application.yml` automatically reads from environment variables - no `.env` file needed!
 
-### "Invalid API key"
-- Verify key starts with `sk-`
-- Check key is active in OpenAI dashboard
-- Try using the key in a direct API call
-
-### Configuration Not Applied
-- Check Spring profile is correct
-- Verify property prefix matches: `mcp.marketing.*`
-- Review application startup logs for property binding errors
+---
 
 ## Reference
 
 - [Spring Boot Externalized Configuration](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config)
 - [Spring Boot Configuration Properties](https://docs.spring.io/spring-boot/docs/current/reference/html/configuration-metadata.html)
-- [Spring Profiles](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.profiles)
 
