@@ -16,7 +16,9 @@
     <artifactId>mcp-marketing-suite</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>MCP Marketing Suite</name>
-    <description>Open-source marketing copilot built on MCP and AI orchestration</description>
+    <description>MCP-native Marketing Platform - Plataforma de marketing orientada a MCP com Java SDK, Spring Boot, para
+        orquestrar workflows de forma padronizada, auditável e integrável com IA, URA, CRMs e APIs externas
+    </description>
 
     <properties>
         <java.version>23</java.version>
