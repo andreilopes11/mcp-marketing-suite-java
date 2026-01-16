@@ -1,7 +1,5 @@
 server:
   port: 8080
-  servlet:
-    context-path: /
 
 spring:
   application:
@@ -10,57 +8,23 @@ spring:
     serialization:
       indent-output: true
       write-dates-as-timestamps: false
-    deserialization:
-      fail-on-unknown-properties: false
-  main:
-    allow-bean-definition-overriding: true
-    banner-mode: CONSOLE
-  banner:
-    location: classpath:banner.txt
 
+# MCP SDK Configuration
 mcp:
-  marketing:
-    llm:
-      provider: openai
-      api-key: ${OPENAI_API_KEY:}
-      model: ${LLM_MODEL:gpt-4}
-      temperature: 0.2
-      max-tokens: 2000
-    output-directory: ${OUTPUT_DIR:./outputs}
-    enable-ai-agents: ${ENABLE_AI_AGENTS:true}
-    supported-languages:
-      - en
-      - pt
-      - es
-  openai:
-    title: MCP Marketing Suite API
-    description: Marketing content automation endpoints
-    version: v1
-    server-url: http://localhost:8080
-
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
+  sdk:
     enabled: true
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
+    server:
+      name: mcp-marketing-suite-server
+      version: 0.1.0
+      endpoint: /mcp
+    resources:
+      enabled: true
+    tools:
+      enabled: true
 
 logging:
   level:
     root: INFO
     com.mcp.marketing: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [request_id=%X{request_id}] - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [request_id=%X{request_id}] - %msg%n"
-  file:
-    name: logs/mcp-marketing-suite.log
-
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
