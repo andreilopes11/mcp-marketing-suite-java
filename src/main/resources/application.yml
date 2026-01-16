@@ -1,20 +1,38 @@
+info:
+  app:
+    name: ${spring.application.name}
+    description: ${spring.application.description}
+    version: ${spring.application.version}
+
+app:
+  banner:
+    title: ${spring.application.name}
+    mode: ${spring.application.description}
+  outputs:
+    directory: ./outputs
+    enabled: true
+
 server:
   port: 8080
 
 spring:
   application:
-    name: mcp-marketing-suite
+    name: ${spring.application.name}
   jackson:
     serialization:
       indent-output: true
       write-dates-as-timestamps: false
+  main:
+    allow-bean-definition-overriding: true
+    banner-mode: CONSOLE
+  banner:
+    location: classpath:banner.txt
 
-# MCP SDK Configuration
 mcp:
   sdk:
     enabled: true
     server:
-      name: mcp-marketing-suite-server
+      name: ${spring.application.name}-server
       version: 0.1.0
       endpoint: /mcp
     resources:
@@ -22,16 +40,78 @@ mcp:
     tools:
       enabled: true
 
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+    displayRequestDuration: true
+    filter: true
+    tryItOutEnabled: true
+  show-actuator: true
+  use-management-port: false
+  packages-to-scan: com.mcp.marketing.api.controller
+  paths-to-match: /api/**,/health
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus,env,loggers
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    diskspace:
+      enabled: true
+      threshold: 10MB
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+    export:
+      prometheus:
+        enabled: true
+
 logging:
   level:
     root: INFO
     com.mcp.marketing: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: WARN
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-
-# Application Configuration
-app:
-  outputs:
-    directory: ./outputs
-    enabled: true
-
+    console: "%d{ISO8601} level=%-5level request_id=%X{request_id:-n/a} thread=%thread logger=%logger{36} - %msg%n%ex"
+    file: "%d{ISO8601} level=%-5level request_id=%X{request_id:-n/a} thread=%thread logger=%logger{36} - %msg%n%ex"
+  file:
+    name: logs/mcp-marketing-suite.log
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB

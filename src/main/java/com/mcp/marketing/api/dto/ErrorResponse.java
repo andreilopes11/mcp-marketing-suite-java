@@ -52,6 +52,11 @@ public class ErrorResponse {
     private String path;
 
     /**
+     * Request execution time in milliseconds
+     */
+    private Long executionTimeMs;
+
+    /**
      * Field-level validation errors
      */
     private List<FieldError> fieldErrors;
@@ -72,7 +77,7 @@ public class ErrorResponse {
     /**
      * Create error response for validation failures
      */
-    public static ErrorResponse validation(String requestId, String path, List<FieldError> fieldErrors) {
+    public static ErrorResponse validation(String requestId, String path, List<FieldError> fieldErrors, Long executionTimeMs) {
         return ErrorResponse.builder()
                 .requestId(requestId)
                 .timestamp(Instant.now().toString())
@@ -81,13 +86,14 @@ public class ErrorResponse {
                 .message("Validation failed for one or more fields")
                 .path(path)
                 .fieldErrors(fieldErrors)
+                .executionTimeMs(executionTimeMs)
                 .build();
     }
 
     /**
      * Create generic error response
      */
-    public static ErrorResponse of(String requestId, Integer status, String error, String message, String path) {
+    public static ErrorResponse of(String requestId, Integer status, String error, String message, String path, Long executionTimeMs) {
         return ErrorResponse.builder()
                 .requestId(requestId)
                 .timestamp(Instant.now().toString())
@@ -95,6 +101,7 @@ public class ErrorResponse {
                 .error(error)
                 .message(message)
                 .path(path)
+                .executionTimeMs(executionTimeMs)
                 .build();
     }
 }
