@@ -1,13 +1,13 @@
 info:
   app:
-    name: ${spring.application.name}
-    description: ${spring.application.description}
-    version: ${spring.application.version}
+    name: MCP Marketing Suite
+    description: MCP-native Marketing Platform with Java SDK for deterministic content generation
+    version: 0.1.0
 
 app:
   banner:
-    title: ${spring.application.name}
-    mode: ${spring.application.description}
+    title: MCP Marketing Suite
+    mode: Deterministic Content Generation (AI-ready)
   outputs:
     directory: ./outputs
     enabled: true
@@ -17,7 +17,7 @@ server:
 
 spring:
   application:
-    name: ${spring.application.name}
+    name: mcp-marketing-suite
   jackson:
     serialization:
       indent-output: true
@@ -32,7 +32,7 @@ mcp:
   sdk:
     enabled: true
     server:
-      name: ${spring.application.name}-server
+      name: mcp-marketing-suite-server
       version: 0.1.0
       endpoint: /mcp
     resources:
