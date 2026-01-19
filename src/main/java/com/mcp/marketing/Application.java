@@ -1,26 +1,27 @@
 package com.mcp.marketing;
 
-import com.mcp.marketing.service.OutputService;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+/**
+ * MCP Marketing Suite - Main Application
+ * <p>
+ * MCP-native Marketing Platform built with Java, Spring Boot and Model Context Protocol (Java SDK)
+ * for orchestrating marketing workflows in a standardized, auditable and integrable way.
+ * <p>
+ * Key Features:
+ * - MCP Server as core orchestration layer
+ * - REST API as adapter
+ * - All executions generate request_id, JSON logs and save output to ./outputs
+ * - Deterministic mode (can run without AI)
+ */
 @SpringBootApplication
-@EnableAsync
+@ConfigurationPropertiesScan
 public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-    }
-
-    /**
-     * Initialize output directory structure on application startup
-     */
-    @Bean
-    public CommandLineRunner initOutputDirectories(OutputService outputService) {
-        return args -> outputService.initializeOutputDirectories();
     }
 }
 

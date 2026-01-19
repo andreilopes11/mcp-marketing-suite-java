@@ -1,0 +1,10 @@
+{
+  "product": "SaaS Analytics Tool",
+  "audience": "Data Analysts",
+  "brandVoice": "Technical and Helpful",
+  "goals": "Convert trial users to paying customers",
+  "language": "en",
+  "sequenceLength": 5,
+  "channels": ["email", "in-app"],
+  "conversionGoal": "Upgrade to premium plan"
+}

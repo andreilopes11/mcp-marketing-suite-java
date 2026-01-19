@@ -1,7 +1,19 @@
+info:
+  app:
+    name: MCP Marketing Suite
+    description: MCP-native Marketing Platform with Java SDK for deterministic content generation
+    version: 0.1.0
+
+app:
+  banner:
+    title: MCP Marketing Suite
+    mode: Deterministic Content Generation (AI-ready)
+  outputs:
+    directory: ./outputs
+    enabled: true
+
 server:
   port: 8080
-  servlet:
-    context-path: /
 
 spring:
   application:
@@ -10,8 +22,6 @@ spring:
     serialization:
       indent-output: true
       write-dates-as-timestamps: false
-    deserialization:
-      fail-on-unknown-properties: false
   main:
     allow-bean-definition-overriding: true
     banner-mode: CONSOLE
@@ -19,48 +29,89 @@ spring:
     location: classpath:banner.txt
 
 mcp:
-  marketing:
-    llm:
-      provider: openai
-      api-key: ${OPENAI_API_KEY:}
-      model: ${LLM_MODEL:gpt-4}
-      temperature: 0.2
-      max-tokens: 2000
-    output-directory: ${OUTPUT_DIR:./outputs}
-    enable-ai-agents: ${ENABLE_AI_AGENTS:true}
-    supported-languages:
-      - en
-      - pt
-      - es
-  openai:
-    title: MCP Marketing Suite API
-    description: Marketing content automation endpoints
-    version: v1
-    server-url: http://localhost:8080
+  sdk:
+    enabled: true
+    server:
+      name: mcp-marketing-suite-server
+      version: 0.1.0
+      endpoint: /mcp
+    resources:
+      enabled: true
+    tools:
+      enabled: true
 
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+    displayRequestDuration: true
+    filter: true
+    tryItOutEnabled: true
+  show-actuator: true
+  use-management-port: false
+  packages-to-scan: com.mcp.marketing.api.controller
+  paths-to-match: /api/**,/health
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 management:
   endpoints:
     web:
+      base-path: /actuator
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus,env,loggers
   endpoint:
     health:
       show-details: always
+      show-components: always
+      probes:
+        enabled: true
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    diskspace:
+      enabled: true
+      threshold: 10MB
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+    export:
+      prometheus:
+        enabled: true
 
 logging:
   level:
     root: INFO
     com.mcp.marketing: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: WARN
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [request_id=%X{request_id}] - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [request_id=%X{request_id}] - %msg%n"
+    console: "%d{ISO8601} level=%-5level request_id=%X{request_id:-n/a} thread=%thread logger=%logger{36} - %msg%n%ex"
+    file: "%d{ISO8601} level=%-5level request_id=%X{request_id:-n/a} thread=%thread logger=%logger{36} - %msg%n%ex"
   file:
     name: logs/mcp-marketing-suite.log
-
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB
