@@ -34,7 +34,7 @@ class OrchestratorServiceTest {
                 .audience("Small Business Owners")
                 .brandVoice("Professional and Approachable")
                 .goals("Generate 100 qualified leads per month")
-                .language("en")
+                .language("en-US")
                 .executionMode(ExecutionMode.DETERMINISTIC)
                 .build();
 
@@ -86,7 +86,7 @@ class OrchestratorServiceTest {
                 .audience("Marketing Managers")
                 .brandVoice("Innovative and Data-Driven")
                 .goals("Increase ROI by 50%")
-                .language("en")
+                .language("en-US")
                 .budget("10000")
                 .duration("6 months")
                 .platforms(List.of("google", "meta", "linkedin"))
@@ -109,7 +109,7 @@ class OrchestratorServiceTest {
                 .audience("Online Retailers")
                 .brandVoice("Trustworthy and Efficient")
                 .goals("Increase organic traffic by 200%")
-                .language("en")
+                .language("en-US")
                 .domain("ecommerce-platform.com")
                 .monthlyBudget(5000)
                 .build();
@@ -162,7 +162,7 @@ class OrchestratorServiceTest {
                 .audience("Data Analysts")
                 .brandVoice("Technical and Insightful")
                 .goals("Convert free trial users to paid")
-                .language("en")
+                .language("en-US")
                 .sequenceLength(4)
                 .conversionGoal("20% trial-to-paid conversion")
                 .channels(List.of("email", "in-app"))
@@ -225,7 +225,7 @@ class OrchestratorServiceTest {
                 .audience("Team Leads and Project Managers")
                 .brandVoice("Collaborative and Organized")
                 .goals("Acquire 1000 new customers")
-                .language("en")
+                .language("en-US")
                 .marketSegment("Tech Startups")
                 .timeframe("Q1 2026")
                 .budget("50000")
@@ -288,7 +288,7 @@ class OrchestratorServiceTest {
                 .product("Test Product")
                 .brandVoice("Professional")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 // Missing audience
                 .build();
 
@@ -307,7 +307,7 @@ class OrchestratorServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .budget("5000")
                 .build();
 
@@ -330,7 +330,7 @@ class OrchestratorServiceTest {
                 .audience("Sales Teams")
                 .brandVoice("Professional")
                 .goals("Increase sales")
-                .language("en")
+                .language("en-US")
                 .keywords(customKeywords)
                 .build();
 
@@ -351,7 +351,7 @@ class OrchestratorServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -373,7 +373,7 @@ class OrchestratorServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .domain("example.com")
                 .build();
 

@@ -31,7 +31,7 @@ class ValidationServiceTest {
                 .audience("Small Business")
                 .brandVoice("Professional")
                 .goals("Generate leads")
-                .language("en")
+                .language("en-US")
                 .executionMode(ExecutionMode.DETERMINISTIC)
                 .build();
 
@@ -61,7 +61,7 @@ class ValidationServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -80,7 +80,7 @@ class ValidationServiceTest {
                 .product("Test Product")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -97,7 +97,7 @@ class ValidationServiceTest {
                 .product("Test Product")
                 .audience("Test Audience")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -114,7 +114,7 @@ class ValidationServiceTest {
                 .product("Test Product")
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -167,7 +167,7 @@ class ValidationServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -242,7 +242,7 @@ class ValidationServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 // Optional fields not set: budget, platforms, domain, etc.
                 .build();
 
@@ -261,7 +261,7 @@ class ValidationServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -276,7 +276,7 @@ class ValidationServiceTest {
         // Given - missing required field
         MarketingContext context = MarketingContext.builder()
                 .product("Test Product")
-                .language("en")
+                .language("en-US")
                 .build();
 
         // When
@@ -294,7 +294,7 @@ class ValidationServiceTest {
                 .audience("Test Audience")
                 .brandVoice("Test Voice")
                 .goals("Test Goals")
-                .language("en")
+                .language("en-US")
                 .executionMode(ExecutionMode.AI_ENABLED)
                 .build();
 
