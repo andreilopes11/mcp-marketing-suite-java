@@ -47,7 +47,7 @@ public class ValidationService {
         if (isBlank(context.getLanguage())) {
             errors.add("language is required");
         } else if (!isValidLanguage(context.getLanguage())) {
-            errors.add("language must be 'pt-BR' or 'en'");
+            errors.add("language must be 'pt-BR' or 'en-US' or 'es-ES'");
         }
 
         return errors;
@@ -70,7 +70,11 @@ public class ValidationService {
      * @return true if valid
      */
     private boolean isValidLanguage(String language) {
-        return "pt-BR".equals(language) || "en".equals(language);
+        if (language == null) {
+            return false;
+        }
+        String normalized = language.trim().toLowerCase();
+        return normalized.equals("pt-br") || normalized.equals("en-us") || normalized.equals("es-es");
     }
 
     /**

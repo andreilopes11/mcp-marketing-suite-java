@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.lang.management.ManagementFactory;
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -136,7 +137,20 @@ public class MarketingController {
                 .audience(audience)
                 .brandVoice(brandVoice)
                 .goals(goals)
-                .language(language);
+                .language(normalizeLanguage(language));
+    }
+
+    private String normalizeLanguage(String language) {
+        if (!StringUtils.hasText(language)) {
+            return "en-US";
+        }
+        String normalized = language.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "pt-br" -> "pt-BR";
+            case "en-us" -> "en-US";
+            case "es-es" -> "es-ES";
+            default -> language.trim();
+        };
     }
 
     private <T> ResponseEntity<StandardResponse<Map<String, Object>>> processRequest(HttpServletRequest servletRequest,

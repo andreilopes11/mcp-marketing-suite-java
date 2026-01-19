@@ -77,7 +77,7 @@ class HealthControllerTests {
                 "audience", "B2B",
                 "brandVoice", "Professional",
                 "goals", "Leads",
-                "language", "en"
+                "language", "en-US"
         ));
 
         mockMvc.perform(post("/api/marketing/ads")

@@ -1,13 +1,21 @@
 package com.mcp.marketing.mcp;
 
+import com.mcp.marketing.api.dto.StandardResponse;
+import com.mcp.marketing.domain.model.AdsResult;
+import com.mcp.marketing.domain.model.CrmSequencesResult;
+import com.mcp.marketing.domain.model.SeoPlanResult;
+import com.mcp.marketing.domain.model.StrategyResult;
 import com.mcp.marketing.domain.ports.StoragePort;
 import com.mcp.marketing.domain.service.OrchestratorService;
 import com.mcp.marketing.domain.service.ValidationService;
 import com.mcp.marketing.mcp.server.McpMarketingServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,208 +23,285 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
- * Smoke tests for MCP Server
+ * Unit tests for MCP server tools/resources.
  */
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class McpServerSmokeTest {
 
-    @Autowired
+    @Mock
     private OrchestratorService orchestratorService;
 
-    @Autowired
+    @Mock
     private ValidationService validationService;
 
-    @Autowired
+    @Mock
     private StoragePort storagePort;
 
-    private McpMarketingServer mcpServer;
+    private McpMarketingServer server;
 
     @BeforeEach
     void setUp() {
-        mcpServer = new McpMarketingServer(orchestratorService, validationService, storagePort);
-        mcpServer.initialize();
+        server = buildServer(true, true);
     }
 
     @Test
-    void testMcpServerInitialization() {
-        // Verify server is initialized
-        assertNotNull(mcpServer, "MCP Server should be initialized");
-        assertTrue(mcpServer.isToolsEnabled(), "Tools should be enabled");
-        assertTrue(mcpServer.isResourcesEnabled(), "Resources should be enabled");
-        assertEquals("mcp-marketing-suite-server", mcpServer.getServerName());
+    void initializesToolsAndResources() {
+        assertEquals("mcp-marketing-suite-server", server.getServerName());
+        assertTrue(server.isToolsEnabled());
+        assertTrue(server.isResourcesEnabled());
+        assertNotNull(server.getAdsTool());
+        assertNotNull(server.getSeoTool());
+        assertNotNull(server.getCrmTool());
+        assertNotNull(server.getStrategyTool());
+        assertNotNull(server.getProductResource());
+        assertNotNull(server.getAudienceResource());
+        assertNotNull(server.getBrandResource());
+        assertNotNull(server.getCompetitorsResource());
     }
 
     @Test
-    void testAdsToolExecution() {
-        // Given
-        Map<String, Object> input = new LinkedHashMap<>();
-        input.put("product", "Cloud CRM Platform");
-        input.put("audience", "Small Business Owners");
-        input.put("brandVoice", "Professional and Approachable");
-        input.put("goals", "Generate 100 qualified leads per month");
-        input.put("language", "en");
-        input.put("platforms", List.of("google", "meta"));
-        input.put("budget", "5000");
+    void adsToolReturnsSuccessPayload() {
+        when(validationService.validateContext(any())).thenReturn(List.of());
+        when(orchestratorService.generateAds(any())).thenReturn(sampleAdsResult());
+        when(storagePort.saveJson(eq("ads"), anyString(), any(StandardResponse.class))).thenReturn("/tmp/ads.json");
 
-        // When
-        Map<String, Object> result = mcpServer.getAdsTool().execute(input);
+        Map<String, Object> result = server.getAdsTool().execute(validAdsInput());
 
-        // Then
-        assertNotNull(result, "Result should not be null");
-        assertTrue((Boolean) result.get("success"), "Tool execution should be successful");
-        assertNotNull(result.get("requestId"), "Should have request ID");
-        assertNotNull(result.get("data"), "Should have data");
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) result.get("data");
-        assertEquals("ads", data.get("artifact_type"));
-        assertNotNull(data.get("result"), "Should have result");
-        assertNotNull(data.get("execution_time_ms"), "Should have execution time");
-    }
-
-    @Test
-    void testSeoPlanToolExecution() {
-        // Given
-        Map<String, Object> input = new LinkedHashMap<>();
-        input.put("product", "E-commerce Platform");
-        input.put("audience", "Online Retailers");
-        input.put("brandVoice", "Trustworthy");
-        input.put("goals", "Increase organic traffic");
-        input.put("language", "en");
-        input.put("domain", "ecommerce.com");
-        input.put("keywords", List.of("e-commerce", "online store"));
-
-        // When
-        Map<String, Object> result = mcpServer.getSeoTool().execute(input);
-
-        // Then
-        assertNotNull(result);
         assertTrue((Boolean) result.get("success"));
-
+        assertEquals(200, result.get("status"));
+        assertNotNull(result.get("requestId"));
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) result.get("data");
+        assertThat(data).containsEntry("artifact_type", "ads").containsKey("execution_time_ms");
+        assertThat(data).containsEntry("output_path", "/tmp/ads.json");
+        verify(storagePort).saveJson(eq("ads"), anyString(), any(StandardResponse.class));
+    }
+
+    @Test
+    void seoToolReturnsValidationError() {
+        when(validationService.validateContext(any())).thenReturn(List.of("language missing"));
+
+        Map<String, Object> result = server.getSeoTool().execute(validSeoInput());
+
+        assertFalse((Boolean) result.get("success"));
+        assertEquals("VALIDATION_ERROR", result.get("error"));
+        assertTrue(((String) result.get("message")).contains("language"));
+        verify(storagePort, never()).saveJson(anyString(), anyString(), any());
+    }
+
+    @Test
+    void crmToolRejectsMissingField() {
+        Map<String, Object> result = server.getCrmTool().execute(Map.of("product", "CRM"));
+
+        assertFalse((Boolean) result.get("success"));
+        assertEquals("INVALID_INPUT", result.get("error"));
+        assertTrue(((String) result.get("message")).contains("audience"));
+    }
+
+    @Test
+    void strategyToolHandlesInternalError() {
+        when(validationService.validateContext(any())).thenReturn(List.of());
+        when(orchestratorService.generateStrategy(any())).thenThrow(new IllegalStateException("boom"));
+
+        Map<String, Object> result = server.getStrategyTool().execute(validStrategyInput());
+
+        assertFalse((Boolean) result.get("success"));
+        assertEquals("INTERNAL_ERROR", result.get("error"));
+        assertEquals(400, result.get("status"));
+    }
+
+    @Test
+    void strategyToolPersistsSuccessfulResponse() {
+        when(validationService.validateContext(any())).thenReturn(List.of());
+        when(orchestratorService.generateStrategy(any())).thenReturn(sampleStrategyResult());
+        when(storagePort.saveJson(eq("strategy"), anyString(), any(StandardResponse.class))).thenReturn("/tmp/strategy.json");
+
+        Map<String, Object> result = server.getStrategyTool().execute(validStrategyInput());
+
+        assertTrue((Boolean) result.get("success"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) result.get("data");
+        assertEquals("strategy", data.get("artifact_type"));
+        assertEquals("/tmp/strategy.json", data.get("output_path"));
+        verify(storagePort).saveJson(eq("strategy"), anyString(), any(StandardResponse.class));
+    }
+
+    @Test
+    void crmToolSuccessPersistsEnvelope() {
+        when(validationService.validateContext(any())).thenReturn(List.of());
+        when(orchestratorService.generateCrmSequences(any())).thenReturn(sampleCrmResult());
+        when(storagePort.saveJson(eq("crm-sequences"), anyString(), any(StandardResponse.class))).thenReturn("/tmp/crm.json");
+
+        Map<String, Object> result = server.getCrmTool().execute(validCrmInput());
+
+        assertTrue((Boolean) result.get("success"));
+        ArgumentCaptor<StandardResponse> captor = ArgumentCaptor.forClass(StandardResponse.class);
+        verify(storagePort).saveJson(eq("crm-sequences"), anyString(), captor.capture());
+        assertEquals("/tmp/crm.json", ((Map<?, ?>) result.get("data")).get("output_path"));
+        assertEquals("crm-sequences", ((Map<?, ?>) result.get("data")).get("artifact_type"));
+        assertTrue(captor.getValue().getSuccess());
+    }
+
+    @Test
+    void seoToolCastsOptionalInputs() {
+        when(validationService.validateContext(any())).thenReturn(List.of());
+        when(orchestratorService.generateSeoPlan(any())).thenReturn(sampleSeoPlan());
+        when(storagePort.saveJson(eq("seo-plan"), anyString(), any(StandardResponse.class))).thenReturn(null);
+
+        Map<String, Object> result = server.getSeoTool().execute(validSeoInput());
+
+        assertTrue((Boolean) result.get("success"));
+        Map<?, ?> data = (Map<?, ?>) result.get("data");
+        assertNull(data.get("output_path"));
         assertEquals("seo-plan", data.get("artifact_type"));
     }
 
     @Test
-    void testCrmSequencesToolExecution() {
-        // Given
-        Map<String, Object> input = new LinkedHashMap<>();
-        input.put("product", "SaaS Analytics Tool");
-        input.put("audience", "Data Analysts");
-        input.put("brandVoice", "Technical");
-        input.put("goals", "Convert trial users");
-        input.put("language", "en");
-        input.put("sequenceLength", 4);
-
-        // When
-        Map<String, Object> result = mcpServer.getCrmTool().execute(input);
-
-        // Then
-        assertNotNull(result);
-        assertTrue((Boolean) result.get("success"));
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) result.get("data");
-        assertEquals("crm-sequences", data.get("artifact_type"));
+    void toolsDisabledSkipsInitialization() {
+        McpMarketingServer withoutTools = buildServer(false, true);
+        assertFalse(withoutTools.isToolsEnabled());
+        assertNull(withoutTools.getAdsTool());
+        assertNotNull(withoutTools.getProductResource());
     }
 
     @Test
-    void testStrategyToolExecution() {
-        // Given
+    void resourcesDisabledSkipsInitialization() {
+        McpMarketingServer withoutResources = buildServer(true, false);
+        assertFalse(withoutResources.isResourcesEnabled());
+        assertNotNull(withoutResources.getAdsTool());
+        assertNull(withoutResources.getProductResource());
+        assertNull(withoutResources.getAudienceResource());
+    }
+
+    @Test
+    void productResourceHandlesSpecificAndMissingIds() {
+        Map<String, Object> listResponse = server.getProductResource().read("product/list");
+        assertEquals("application/json", listResponse.get("mimeType"));
+        Map<?, ?> listContent = (Map<?, ?>) listResponse.get("content");
+        assertTrue((Integer) listContent.get("count") >= 3);
+
+        Map<String, Object> itemResponse = server.getProductResource().read("product/crm-001");
+        assertEquals("crm-001", ((Map<?, ?>) itemResponse.get("content")).get("id"));
+
+        Map<String, Object> missingResponse = server.getProductResource().read("product/missing");
+        assertEquals("Product not found: missing", missingResponse.get("error"));
+        assertNotNull(missingResponse.get("availableProducts"));
+    }
+
+    @Test
+    void audienceResourceHandlesNullUriAsList() {
+        Map<String, Object> response = server.getAudienceResource().read(null);
+        Map<?, ?> content = (Map<?, ?>) response.get("content");
+        assertEquals(server.getAudienceResource().read("audience/list").get("content"), content);
+    }
+
+    @Test
+    void brandResourceReturnsItemById() {
+        Map<String, Object> response = server.getBrandResource().read("brand/brand-002");
+        assertEquals("brand-002", ((Map<?, ?>) response.get("content")).get("id"));
+    }
+
+    @Test
+    void competitorsResourceListsCategories() {
+        Map<String, Object> list = server.getCompetitorsResource().read("competitors/list");
+        Map<?, ?> content = (Map<?, ?>) list.get("content");
+        assertTrue(((List<?>) content.get("categories")).contains("CRM"));
+
+        Map<String, Object> missing = server.getCompetitorsResource().read("competitors/unknown");
+        assertEquals("Competitor not found: unknown", missing.get("error"));
+    }
+
+    private McpMarketingServer buildServer(boolean toolsEnabled, boolean resourcesEnabled) {
+        McpMarketingServer instance = new McpMarketingServer(orchestratorService, validationService, storagePort);
+        ReflectionTestUtils.setField(instance, "serverName", "mcp-marketing-suite-server");
+        ReflectionTestUtils.setField(instance, "serverVersion", "0.1.0-test");
+        ReflectionTestUtils.setField(instance, "toolsEnabled", toolsEnabled);
+        ReflectionTestUtils.setField(instance, "resourcesEnabled", resourcesEnabled);
+        instance.initialize();
+        return instance;
+    }
+
+    private Map<String, Object> validAdsInput() {
         Map<String, Object> input = new LinkedHashMap<>();
-        input.put("product", "Project Management Software");
+        input.put("product", "Cloud CRM Platform");
+        input.put("audience", "SMB Owners");
+        input.put("brandVoice", "Professional");
+        input.put("goals", "Acquire leads");
+        input.put("language", "pt-BR");
+        input.put("platforms", List.of("google", "meta"));
+        input.put("budget", "5000");
+        input.put("duration", "Q1");
+        return input;
+    }
+
+    private Map<String, Object> validSeoInput() {
+        Map<String, Object> input = new LinkedHashMap<>();
+        input.put("product", "E-commerce Platform");
+        input.put("audience", "Retailers");
+        input.put("brandVoice", "Trustworthy");
+        input.put("goals", "Increase traffic");
+        input.put("language", "en-US");
+        input.put("keywords", List.of("seo", "commerce"));
+        input.put("domain", "example.com");
+        input.put("monthlyBudget", 10000);
+        return input;
+    }
+
+    private Map<String, Object> validCrmInput() {
+        Map<String, Object> input = new LinkedHashMap<>();
+        input.put("product", "Analytics Suite");
+        input.put("audience", "Growth Teams");
+        input.put("brandVoice", "Analytical");
+        input.put("goals", "Convert trials");
+        input.put("language", "es-ES");
+        input.put("sequenceLength", 5);
+        input.put("channels", List.of("email", "sms"));
+        input.put("conversionGoal", "Demos");
+        return input;
+    }
+
+    private Map<String, Object> validStrategyInput() {
+        Map<String, Object> input = new LinkedHashMap<>();
+        input.put("product", "Project Management Tool");
         input.put("audience", "Team Leads");
         input.put("brandVoice", "Collaborative");
         input.put("goals", "Acquire 1000 customers");
-        input.put("language", "en");
-        input.put("timeframe", "Q1 2026");
-
-        // When
-        Map<String, Object> result = mcpServer.getStrategyTool().execute(input);
-
-        // Then
-        assertNotNull(result);
-        assertTrue((Boolean) result.get("success"));
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) result.get("data");
-        assertEquals("strategy", data.get("artifact_type"));
+        input.put("language", "pt-BR");
+        input.put("marketSegment", "SaaS");
+        input.put("competitorAnalysis", "Strong incumbents");
+        input.put("channels", List.of("linkedin", "events"));
+        input.put("timeframe", "H1 2026");
+        return input;
     }
 
-    @Test
-    void testToolValidationError() {
-        // Given - missing required field
-        Map<String, Object> input = new LinkedHashMap<>();
-        input.put("product", "Test Product");
-        // Missing audience, brandVoice, goals, language
-
-        // When
-        Map<String, Object> result = mcpServer.getAdsTool().execute(input);
-
-        // Then
-        assertNotNull(result);
-        assertFalse((Boolean) result.get("success"), "Should fail validation");
-        assertEquals("INVALID_INPUT", result.get("error"));
+    private AdsResult sampleAdsResult() {
+        return AdsResult.builder().qaScore(95).recommendations(List.of("Add CTA")).build();
     }
 
-    @Test
-    void testProductResource() {
-        // When
-        Map<String, Object> result = mcpServer.getProductResource().read("product/list");
-
-        // Then
-        assertNotNull(result);
-        assertEquals("application/json", result.get("mimeType"));
-        assertNotNull(result.get("content"));
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> content = (Map<String, Object>) result.get("content");
-        assertNotNull(content.get("products"));
-        assertTrue((Integer) content.get("count") > 0);
+    private SeoPlanResult sampleSeoPlan() {
+        return SeoPlanResult.builder().qaScore(88).primaryKeywords(List.of("crm"))
+                .contentStrategy(SeoPlanResult.ContentStrategy.builder().monthlyArticles(4).build()).build();
     }
 
-    @Test
-    void testAudienceResource() {
-        // When
-        Map<String, Object> result = mcpServer.getAudienceResource().read("audience/list");
-
-        // Then
-        assertNotNull(result);
-        assertNotNull(result.get("content"));
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> content = (Map<String, Object>) result.get("content");
-        assertNotNull(content.get("audiences"));
+    private CrmSequencesResult sampleCrmResult() {
+        return CrmSequencesResult.builder()
+                .qaScore(90)
+                .emails(List.of(CrmSequencesResult.EmailStep.builder().dayNumber(1).subject("Hello").build()))
+                .build();
     }
 
-    @Test
-    void testBrandResource() {
-        // When
-        Map<String, Object> result = mcpServer.getBrandResource().read("brand/brand-001");
-
-        // Then
-        assertNotNull(result);
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> content = (Map<String, Object>) result.get("content");
-        assertNotNull(content);
-        assertEquals("brand-001", content.get("id"));
-    }
-
-    @Test
-    void testCompetitorsResource() {
-        // When
-        Map<String, Object> result = mcpServer.getCompetitorsResource().read("competitors/list");
-
-        // Then
-        assertNotNull(result);
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> content = (Map<String, Object>) result.get("content");
-        assertNotNull(content.get("competitors"));
-        assertThat((Integer) content.get("count")).isGreaterThan(0);
+    private StrategyResult sampleStrategyResult() {
+        return StrategyResult.builder()
+                .qaScore(92)
+                .executiveSummary("Plan")
+                .build();
     }
 }

@@ -1,12 +1,14 @@
 package com.mcp.marketing.infra.storage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.mcp.marketing.api.dto.StandardResponse;
 import com.mcp.marketing.config.AppConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +20,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for FileSystemStorage
@@ -248,6 +252,38 @@ class FileSystemStorageTest {
         // Pretty-printed JSON should have newlines and indentation
         assertTrue(content.contains("\n"), "JSON should be pretty-printed with newlines");
         assertTrue(content.contains("  "), "JSON should have indentation");
+    }
+
+    @Test
+    void testConstructor_WhenDirectoryCreationFails_ThrowsRuntimeException() {
+        AppConfiguration failingConfig = new AppConfiguration();
+        AppConfiguration.Outputs outputs = new AppConfiguration.Outputs();
+        outputs.setDirectory("failing-dir");
+        outputs.setEnabled(true);
+        failingConfig.setOutputs(outputs);
+
+        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(any(Path.class))).thenReturn(false);
+            filesMock.when(() -> Files.createDirectories(any(Path.class))).thenThrow(new IOException("boom"));
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> new FileSystemStorage(failingConfig, objectMapper));
+            assertTrue(ex.getMessage().contains("Failed to initialize output directory"));
+        }
+    }
+
+    @Test
+    void testSaveJson_WhenWriteFails_ThrowsRuntimeException() throws IOException {
+        ObjectMapper failingMapper = mock(ObjectMapper.class);
+        ObjectWriter writer = mock(ObjectWriter.class);
+        when(failingMapper.writerWithDefaultPrettyPrinter()).thenReturn(writer);
+        doThrow(new IOException("boom")).when(writer).writeValue(any(File.class), any());
+
+        FileSystemStorage failingStorage = new FileSystemStorage(appConfig, failingMapper);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> failingStorage.saveJson("ads", "req", StandardResponse.success("req", Map.of())));
+        assertTrue(ex.getMessage().contains("Failed to save artifact"));
     }
 
     @Test

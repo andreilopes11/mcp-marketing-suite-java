@@ -156,7 +156,7 @@ class ValidationServiceTest {
         List<String> errors = validationService.validateContext(context);
 
         // Then
-        assertThat(errors).contains("language must be 'pt-BR' or 'en'");
+        assertThat(errors).contains("language must be 'pt-BR' or 'en-US' or 'es-ES'");
     }
 
     @Test

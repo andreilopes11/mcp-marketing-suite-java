@@ -1,11 +1,7 @@
 package com.mcp.marketing.api.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -15,28 +11,14 @@ import java.util.List;
  * Generates ads for multiple platforms (Google, Meta, LinkedIn)
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdsRequest {
-
-    @NotBlank(message = "product is required")
-    private String product;
-
-    @NotBlank(message = "audience is required")
-    private String audience;
-
-    @NotBlank(message = "brand_voice is required")
-    private String brandVoice;
-
-    @NotBlank(message = "goals is required")
-    private String goals;
-
-    @NotBlank(message = "language is required")
-    @Pattern(regexp = "pt-BR|en", message = "language must be 'pt-BR' or 'en'")
-    private String language;
+@EqualsAndHashCode(callSuper = true)
+public class AdsRequest extends BaseRequest {
 
     private List<String> platforms; // google, meta, linkedin
     private String budget;
     private String duration;
+
 }
