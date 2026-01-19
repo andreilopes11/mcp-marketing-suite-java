@@ -1,393 +1,132 @@
-# MCP Marketing Suite - Quick Start Guide
+# MCP Quick Start
 
-## 🚀 STEP 6 Complete - MCP Server Ready!
+_Last updated: January 19, 2026_
 
-This guide shows you how to use the MCP (Model Context Protocol) Server implementation.
-
----
-
-## 📋 What's Available
-
-### MCP Tools (4)
-1. **ads** - Generate multi-platform advertising content
-2. **seo-plan** - Generate SEO strategy
-3. **crm-sequences** - Generate email nurture sequences
-4. **strategy** - Generate integrated marketing strategy
-
-### MCP Resources (4)
-1. **product** - Mock product information
-2. **audience** - Mock audience personas
-3. **brand** - Mock brand voice guidelines
-4. **competitors** - Mock competitor analysis
+Follow this guide to run the MCP server locally and call the marketing tools from any MCP-compliant client (Claude Desktop, VS Code extensions, custom automation, etc.).
 
 ---
 
-## 🧪 Running Tests
+## 1. Prerequisites
 
-### Option 1: Standalone Test (Recommended)
+- Java 23
+- Maven 3.8+
+- Git Bash or any shell capable of running the commands below
+- Optional: Claude Desktop or another MCP client capable of STDIO transport
+
+Clone the repository and build the project (once):
 
 ```bash
-mvn test -Dtest=McpServerSimpleSmokeTest
+git clone https://github.com/your-org/mcp-marketing-suite-java.git
+cd mcp-marketing-suite-java
+mvn clean install
 ```
 
-**Tests**:
-- ✅ Server initialization
-- ✅ Ads tool execution
-- ✅ Product resource access
-- ✅ Validation error handling
+---
 
-### Option 2: Full Integration Test
+## 2. Start the MCP Server
 
 ```bash
-mvn test -Dtest=McpServerSmokeTest
+mvn -q package
+java -cp target/mcp-marketing-suite-0.1.0-SNAPSHOT.jar \
+     com.mcp.marketing.mcp.server.McpMarketingServer
 ```
 
-**Tests**: 10 comprehensive tests with Spring Boot context
+Default behavior:
+- Transport: STDIO
+- Registered tools: `ads`, `seo-plan`, `crm-sequences`, `strategy`
+- Mock resources: `product`, `audience`, `brand`, `competitors`
+- Persistence: enabled (`./outputs`)
+
+Keep the process running; the client will connect via STDIO pipes.
 
 ---
 
-## 🎯 Running the Demo
+## 3. Manual Tool Call (for Testing)
 
-### Execute the Demo Application
+Use the `mcp-cli` reference client or pipe JSON directly. Example using `npx mcp-cli`:
 
 ```bash
-mvn exec:java -Dexec.mainClass="com.mcp.marketing.mcp.McpServerDemo"
+npx mcp-cli \
+  --tool ads \
+  --payload '{
+    "product": "Cloud CRM",
+    "audience": "SMBs",
+    "brandVoice": "Professional",
+    "goals": "100 leads/month",
+    "language": "en-US"
+  }'
 ```
 
-**Demonstrates**:
-1. Server initialization
-2. Product resource listing
-3. Audience resource query
-4. Brand resource query
-5. Ads generation tool
-6. SEO plan generation tool
-
----
-
-## 💻 Programmatic Usage
-
-### Example 1: Initialize MCP Server
-
-```java
-import com.mcp.marketing.mcp.server.McpMarketingServer;
-import com.mcp.marketing.domain.service.*;
-import com.mcp.marketing.domain.ports.StoragePort;
-
-// Initialize dependencies
-ValidationService validationService = new ValidationService();
-OrchestratorService orchestrator = new OrchestratorService(validationService);
-StoragePort storage = new FileSystemStorage("./outputs", true);
-
-// Create MCP Server
-McpMarketingServer server = new McpMarketingServer(
-    orchestrator, 
-    validationService, 
-    storage
-);
-
-// Initialize
-server.initialize();
-```
-
-### Example 2: Call Ads Tool
-
-```java
-import java.util.Map;
-import java.util.LinkedHashMap;
-
-// Prepare input
-Map<String, Object> input = new LinkedHashMap<>();
-input.put("product", "Cloud CRM Platform");
-input.put("audience", "Small Business Owners");
-input.put("brandVoice", "Professional and Approachable");
-input.put("goals", "Generate 100 qualified leads per month");
-input.put("language", "en");
-
-// Execute tool
-Map<String, Object> result = server.getAdsTool().execute(input);
-
-// Check result
-if ((Boolean) result.get("success")) {
-    System.out.println("✅ Success!");
-    System.out.println("Request ID: " + result.get("requestId"));
-    
-    @SuppressWarnings("unchecked")
-    Map<String, Object> data = (Map<String, Object>) result.get("data");
-    System.out.println("Execution time: " + data.get("execution_time_ms") + "ms");
-    System.out.println("Output: " + data.get("output_path"));
-} else {
-    System.out.println("❌ Error: " + result.get("message"));
-}
-```
-
-### Example 3: Query Resources
-
-```java
-// Get all products
-Map<String, Object> products = server.getProductResource().read("product/list");
-System.out.println("Products: " + products.get("content"));
-
-// Get specific audience
-Map<String, Object> audience = server.getAudienceResource().read("audience/aud-001");
-System.out.println("Audience: " + audience.get("content"));
-
-// Get brand guidelines
-Map<String, Object> brand = server.getBrandResource().read("brand/brand-001");
-System.out.println("Brand Voice: " + brand.get("content"));
-
-// Get competitors
-Map<String, Object> competitors = server.getCompetitorsResource().read("competitors/list");
-System.out.println("Competitors: " + competitors.get("content"));
-```
-
----
-
-## 📊 Tool Input/Output Format
-
-### Input Format (All Tools)
+Expected response (trimmed):
 
 ```json
 {
-  "product": "Product Name",           // required
-  "audience": "Target Audience",       // required
-  "brandVoice": "Brand Tone",          // required
-  "goals": "Marketing Goals",          // required
-  "language": "en" or "pt-BR",         // required
-  // ... tool-specific optional fields
-}
-```
-
-### Success Output
-
-```json
-{
-  "requestId": "uuid",
-  "timestamp": "ISO-8601",
-  "status": 200,
-  "success": true,
+  "status": "SUCCESS",
+  "requestId": "req-abc123",
   "data": {
     "artifact_type": "ads",
-    "execution_time_ms": 250,
-    "result": { /* generated content */ },
-    "output_path": "./outputs/ads_uuid_timestamp.json"
+    "execution_time_ms": 232,
+    "result": { ... },
+    "output_path": "./outputs/ads/req-abc123.json"
   }
 }
 ```
 
-### Error Output
+---
+
+## 4. Connecting Claude Desktop (STDIO)
+
+1. Start the MCP server (see step 2).
+2. Add the tool definition to Claude Desktop’s `claude_desktop_config.json`:
 
 ```json
 {
-  "requestId": "uuid",
-  "timestamp": "ISO-8601",
-  "status": 400,
-  "success": false,
-  "error": "VALIDATION_ERROR",
-  "message": "audience is required",
-  "executionTimeMs": 15
+  "mcpServers": {
+    "mcp-marketing-suite": {
+      "command": "java",
+      "args": [
+        "-cp",
+        "D:/workspace/SaaS_Projects/mcp-marketing-suite-java/target/mcp-marketing-suite-0.1.0-SNAPSHOT.jar",
+        "com.mcp.marketing.mcp.server.McpMarketingServer"
+      ]
+    }
+  }
 }
 ```
 
----
-
-## 🗂️ Resource URI Format
-
-```
-product/list          → List all products
-product/crm-001       → Get product by ID
-
-audience/list         → List all audiences
-audience/aud-001      → Get audience by ID
-
-brand/list            → List all brand voices
-brand/brand-001       → Get brand by ID
-
-competitors/list      → List all competitors
-competitors/comp-001  → Get competitor by ID
-```
+3. Restart Claude Desktop; the `mcp-marketing-suite` tools appear automatically.
+4. Prompt Claude: “Use the `ads` tool to create a campaign for <context>.” Claude will call the tool without manual scripting.
 
 ---
 
-## 🎯 Tool-Specific Parameters
+## 5. Using Resources
 
-### Ads Tool
+Tools can fetch contextual data from resources:
 
-**Required**:
-- `product`, `audience`, `brandVoice`, `goals`, `language`
+| Resource | Sample Call | Description |
+|----------|-------------|-------------|
+| `product` | `resource/list product` | Returns built-in product context |
+| `audience` | `resource/list audience` | Audience personas |
+| `brand` | `resource/list brand` | Voice/style guidelines |
+| `competitors` | `resource/list competitors` | Competitor snapshots |
 
-**Optional**:
-- `platforms` (List<String>): google, meta, linkedin
-- `budget` (String): Budget amount
-- `duration` (String): Campaign duration
-
-### SEO Plan Tool
-
-**Required**:
-- `product`, `audience`, `brandVoice`, `goals`, `language`
-
-**Optional**:
-- `keywords` (List<String>): Target keywords
-- `domain` (String): Website domain
-- `monthlyBudget` (Integer): Monthly budget
-
-### CRM Sequences Tool
-
-**Required**:
-- `product`, `audience`, `brandVoice`, `goals`, `language`
-
-**Optional**:
-- `sequenceLength` (Integer): Number of emails
-- `channels` (List<String>): Communication channels
-- `conversionGoal` (String): Conversion target
-
-### Strategy Tool
-
-**Required**:
-- `product`, `audience`, `brandVoice`, `goals`, `language`
-
-**Optional**:
-- `marketSegment` (String): Market segment
-- `competitorAnalysis` (String): Competitor info
-- `channels` (List<String>): Marketing channels
-- `timeframe` (String): Strategy timeframe
+(Exact commands depend on your MCP client. Claude exposes them in the “Resources” tab.)
 
 ---
 
-## ✅ Verification
+## 6. Troubleshooting
 
-### Check if MCP Server is Working
-
-Run this command to verify everything is set up correctly:
-
-```bash
-# Run standalone test
-mvn test -Dtest=McpServerSimpleSmokeTest
-
-# Expected output:
-# Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
-# BUILD SUCCESS
-```
-
-### Check Output Files
-
-After running tools, check the `./outputs` directory:
-
-```bash
-ls -la ./outputs/
-
-# You should see files like:
-# ads_uuid_timestamp.json
-# seo-plan_uuid_timestamp.json
-# crm-sequences_uuid_timestamp.json
-# strategy_uuid_timestamp.json
-```
+| Symptom | Fix |
+|---------|-----|
+| Server stops immediately | Ensure `JAVA_HOME` points to JDK 23 and you ran `mvn -q package` successfully |
+| Tool returns “language must be …” | Provide `language` as `en-US`, `pt-BR`, or `es-ES` (case-insensitive) |
+| Output path missing | Verify `app.outputs.enabled=true` and the process can write to `./outputs` |
+| Logs lack `request_id` | Make sure REST filter or MCP tool sets the attribute; restart after editing `RequestContextFilter` |
 
 ---
 
-## 📚 Architecture
+## 7. Next Steps
 
-### Zero Logic Duplication
-
-```
-MCP Tool
-    ↓
-ValidationService ← SAME AS REST
-    ↓
-OrchestratorService ← SAME AS REST
-    ↓
-StoragePort ← SAME AS REST
-    ↓
-StandardResponse ← SAME FORMAT
-```
-
-**Key Point**: MCP tools reuse 100% of the REST logic!
-
----
-
-## 🔧 Configuration
-
-### application.yml
-
-```yaml
-mcp:
-  sdk:
-    server:
-      name: mcp-marketing-suite-server
-      version: 0.1.0
-      endpoint: /mcp
-    tools:
-      enabled: true          # Enable/disable tools
-    resources:
-      enabled: true          # Enable/disable resources
-```
-
----
-
-## 📖 Documentation
-
-For more details, see:
-- **`docs/MCP_SERVER_COMPLETE.md`** - Full documentation
-- **`docs/MCP_STEP6_SUMMARY.md`** - Executive summary
-- **`docs/MCP_STEP6_FINAL_REPORT.md`** - Complete report
-
----
-
-## 🎉 Success Criteria
-
-### ✅ MCP server starts without error
-
-**Verified via**:
-- Server initializes on Spring Boot startup
-- Logs show: "MCP Marketing Server initialized successfully"
-- Standalone test passes
-- Demo runs successfully
-
-### ✅ Smoke test demonstrating tool call
-
-**Provided**:
-1. **Standalone test**: `McpServerSimpleSmokeTest` (4 tests)
-2. **Integration test**: `McpServerSmokeTest` (10 tests)
-3. **Executable demo**: `McpServerDemo` (5 scenarios)
-
----
-
-## 🚨 Troubleshooting
-
-### Issue: Tests fail with ApplicationContext error
-
-**Solution**: Use standalone test instead:
-```bash
-mvn test -Dtest=McpServerSimpleSmokeTest
-```
-
-### Issue: Output files not created
-
-**Solution**: Check `application.yml`:
-```yaml
-app:
-  outputs:
-    enabled: true    # Make sure this is true
-    directory: ./outputs
-```
-
-### Issue: Cannot find MCP classes
-
-**Solution**: Rebuild the project:
-```bash
-mvn clean compile
-```
-
----
-
-## 🎯 Next Steps
-
-1. **Run the tests** to verify everything works
-2. **Try the demo** to see tools in action
-3. **Integrate with MCP clients** (Claude Desktop, VS Code, etc.)
-4. **Extend** by adding more tools or resources
-
----
-
-**Status**: ✅ **STEP 6 COMPLETE AND VERIFIED**
-
-All acceptance criteria met. System is production-ready! 🚀
+- Study `docs/MCP_SERVER_COMPLETE.md` to understand the server internals.
+- Use `examples/payloads/*.json` to craft consistent MCP tool payloads.
+- Integrate the STDIO command into your automation (e.g., Node.js child processes) for programmatic marketing workflows.

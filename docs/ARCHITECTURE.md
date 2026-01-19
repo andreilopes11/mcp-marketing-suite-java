@@ -1,283 +1,101 @@
-# Architecture Overview
+# MCP Marketing Suite – Architecture Guide
 
-## System Architecture (With MCP Java SDK Integration)
+_Last updated: January 19, 2026_
+
+This document explains how the MCP Marketing Suite is structured and how REST/MCP integrations traverse the system. Use it to understand where to extend the platform or to validate that deterministic behavior is preserved end-to-end.
+
+---
+
+## 1. Architectural Principles
+
+1. **Single Source of Truth** – `ValidationService` and `OrchestratorService` live in the domain layer and are reused by every adapter (REST + MCP). No logic duplication.
+2. **Ports and Adapters** – Outputs are persisted through the `StoragePort` interface, currently implemented by `FileSystemStorage`. Swap the adapter to change persistence without touching business logic.
+3. **Deterministic Execution** – No threads, LLMs, or external APIs. Inputs + execution mode fully determine outputs. `qa_score` is derived from context completeness.
+4. **Traceability** – Every request carries a `request_id`, stored in MDC, returned to clients, and used as the file name for persisted artifacts.
+
+---
+
+## 2. Layered View
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Client Applications                       │
-│     (HTTP/REST, MCP Clients, Claude Desktop, Cursor)        │
-└─────────────────────┬──────────────────┬────────────────────┘
-                      │                  │
-                      │                  ▼
-                      │      ┌─────────────────────────────┐
-                      │      │   MCP Server Controller     │
-                      │      │   (MCP Protocol Endpoints)  │
-                      │      └────────┬────────────────────┘
-                      │               │
-                      │               ▼
-                      │      ┌─────────────────────────────┐
-                      │      │   MCP Resource Handler      │
-                      │      │   MCP Tool Handler          │
-                      │      └────────┬────────────────────┘
-                      │               │
-                      ▼               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Spring Boot REST API                       │
-│                   (MarketingController)                      │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   MarketingService                           │
-│              (Orchestration & Coordination)                  │
-└────────┬────────────────┬────────────────┬──────────────────┘
-         │                │                │
-         ▼                ▼                ▼
-┌────────────────┐ ┌────────────┐ ┌──────────────────┐
-│ AdGeneratorTool│ │CrmSequence │ │ SeoStrategyTool  │
-└────────┬───────┘ └─────┬──────┘ └────────┬─────────┘
-         │               │                  │
-         └───────────────┴──────────────────┘
-                         │
-                         ▼
-         ┌───────────────────────────────┐
-         │    McpResourceProvider        │
-         │  (Product, Audience, Brand,   │
-         │       Competitors)            │
-         └───────────────┬───────────────┘
-                         │
-         ┌───────────────┴───────────────┐
-         ▼                               ▼
-┌────────────────┐            ┌──────────────────┐
-│  LLM Provider  │            │ ObservabilityService │
-│  (Langchain4j) │            │  (Logging, Tracing)  │
-└────────────────┘            └──────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────┐
-│            Output Storage (JSON Files)           │
-└─────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│ Presentation Layer                                      │
+│  • REST Controllers (Spring MVC)                        │
+│  • MCP Tools (Model Context Protocol SDK)               │
+└───────────────┬─────────────────────────────────────────┘
+                │
+┌───────────────▼─────────────────────────────────────────┐
+│ Domain Layer                                            │
+│  • Models: MarketingContext, AdsResult, ...             │
+│  • Services: ValidationService, OrchestratorService     │
+│  • Enums: ExecutionMode                                │
+└───────────────┬─────────────────────────────────────────┘
+                │
+┌───────────────▼─────────────────────────────────────────┐
+│ Infrastructure Layer                                    │
+│  • StoragePort implementation (FileSystemStorage)       │
+│  • Configuration (RequestIdResolver, filters, logging)  │
+│  • logback + banner resources                           │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## Component Responsibilities
+Key characteristics:
+- Both adapters call the same domain services using `MarketingContext` objects.
+- Persistence and logging sit below the domain to keep the business logic pure.
+- Configuration files (`application.yml`, `logback-spring.xml`, `banner.txt`) provide runtime behavior without code changes.
 
-### 1. Controllers Layer
+---
 
-- **MarketingController**: Handles HTTP/REST requests, validates input, returns responses
-- **McpServerController**: Exposes MCP protocol endpoints for resources and tools
-- **HealthController**: Provides health check endpoint
+## 3. Component Responsibilities
 
-### 2. MCP SDK Layer (NEW)
+| Component | Purpose |
+|-----------|---------|
+| `MarketingController` | Exposes REST endpoints, resolves request ids, times executions, saves outputs |
+| `McpMarketingServer` | Registers MCP tools/resources and routes MCP calls to domain services |
+| `ValidationService` | Enforces required fields and allowed language values |
+| `OrchestratorService` | Generates deterministic payloads for ads, SEO, CRM sequences, and strategies |
+| `StoragePort` | Persists `StandardResponse` envelopes; default implementation writes JSON files |
+| `RequestContextFilter` | Adds/removes `request_id` to the logging MDC |
 
-- **McpSdkConfiguration**: Configures official MCP Java SDK beans and server options
-- **McpResourceHandler**: Exposes marketing resources via MCP protocol (product, audience, brand, competitors)
-- **McpToolHandler**: Exposes marketing tools via MCP protocol (ads, CRM, SEO generators)
-- **McpClientService**: Optional client to consume MCP resources internally (dogfooding)
+---
 
-### 3. Service Layer
+## 4. Sequence Flows
 
-- **MarketingService**: Orchestrates tool execution, manages resources, handles AI enhancement
-- **OutputService**: Manages file output and directory structure
+### REST API Request
 
-### 4. Tool Layer
+1. Client sends POST `/api/marketing/<artifact>` with JSON body.
+2. `MarketingController` resolves/creates a `request_id`, stores start time, and maps payload to `MarketingContext` (normalizing language).
+3. `ValidationService` runs; errors bubble to `GlobalExceptionHandler` and return `ErrorResponse` with `request_id`.
+4. `OrchestratorService` builds deterministic result.
+5. `StoragePort.saveJson()` writes the `StandardResponse` to `./outputs/<artifact>/<request_id>.json`.
+6. Response returns to the client, including `execution_time_ms` and `output_path`.
 
-- **AdGeneratorTool**: Generates ads for Google, Meta, LinkedIn
-- **CrmSequenceTool**: Creates email nurture sequences
-- **SeoStrategyTool**: Develops SEO plans with keywords and tactics
-- **BaseMarketingTool**: Base class for common tool functionality
+### MCP Tool Request
 
-### 5. Resource Layer
+1. MCP client sends a `tools/call` request via STDIO.
+2. `McpMarketingServer` resolves the tool, parses arguments, and builds `MarketingContext` using the same validation rules.
+3. `OrchestratorService` generates the payload.
+4. Result is wrapped in `StandardResponse`, persisted via `StoragePort`, and sent back to the client.
 
-- **McpResourceProvider**: Provides contextual resources (product, audience, brand, competitors)
-- **FileResourceLoader**: Loads resources from file system
-- **JsonResourceLoader**: Parses JSON resource files
+Both paths share logging, persistence, and monitoring infrastructure.
 
-### 6. Configuration Layer
+---
 
-- **MarketingProperties**: Application configuration
-- **LlmConfiguration**: AI/LLM integration setup
-- **McpSdkConfiguration**: MCP SDK server and client configuration
-- **CacheConfiguration**: Caffeine cache setup for performance
-- **AsyncConfiguration**: Async executor configuration
+## 5. Data Persistence & Logging
 
-### 7. Observability Layer
+- **Outputs** – Deterministic JSON artifacts stored per request id. Structure: `outputs/<artifact>/<request_id>.json`.
+- **Logging** – `logback-spring.xml` emits JSON logs. The `RequestContextFilter` ensures every message during a request includes the same `request_id`.
+- **Observability** – `/health`, `/actuator/*`, and Prometheus endpoints expose uptime, build info, and metrics.
 
-- **ObservabilityService**: Request tracking, logging, tracing, metrics
+---
 
-## Data Flow
+## 6. Extension Points
 
-### Example 1: MCP Protocol Request (NEW)
+| Extension | Recommendation |
+|-----------|----------------|
+| New artifact/tool | Add DTO + domain result model, extend `OrchestratorService`, expose via REST + MCP tool pointing to the same builder |
+| Alternative storage | Implement `StoragePort` using S3, database, etc., and replace the Spring bean |
+| Authentication | Wrap REST endpoints with Spring Security filters; MCP transport can enforce auth separately |
+| Localization | Extend `ExecutionMode` or language validation and adjust copy templates |
 
-1. **MCP Client** (Claude Desktop, Cursor, etc.) connects to `/mcp` endpoint
-2. **McpServerController** receives MCP protocol request
-3. **McpResourceHandler** or **McpToolHandler**:
-    - For resources: fetches from McpResourceProvider
-    - For tools: invokes MarketingService methods
-4. **MarketingService**:
-    - Generates request ID
-    - Fetches MCP resources (product, audience, brand)
-    - Calls appropriate tool (AdGeneratorTool, CrmSequenceTool, etc.)
-5. **Tool**:
-    - Generates content
-    - Calculates QA scores
-    - Saves output to file
-    - Returns structured data
-6. **McpServerController** formats response according to MCP protocol
-
-### Example 2: REST API Request (Traditional)
-
-1. **Client** sends POST request to `/api/marketing/ads`
-2. **MarketingController** validates request, forwards to service
-3. **MarketingService**:
-    - Generates request ID
-    - Fetches MCP resources (product, audience, brand)
-    - Calls AdGeneratorTool
-4. **AdGeneratorTool**:
-    - Generates ads for each platform
-    - Calculates QA scores
-    - Saves output to file
-    - Returns structured data
-5. **MarketingService** (optional):
-    - Enhances with AI if enabled
-    - Tracks execution time
-6. **MarketingController** returns response to client
-
-## Key Design Patterns
-
-### 1. Strategy Pattern
-
-Tools implement specific marketing strategies (ads, CRM, SEO)
-
-### 2. Builder Pattern
-
-Used for creating complex domain models (MarketingRequest, MarketingResponse)
-
-### 3. Dependency Injection
-
-Spring Boot manages all component lifecycles and dependencies
-
-### 4. Template Method
-
-ObservabilityService provides tracing templates for operations
-
-### 5. Repository Pattern
-
-McpResourceProvider abstracts resource access
-
-## Configuration Management
-
-Configuration hierarchy:
-
-1. `application.yml` - Default configuration
-2. Environment variables - Override defaults
-3. `.env` file - Local development (not committed)
-
-## Extensibility Points
-
-### Adding New Tools
-
-1. Create tool class in `tool` package
-2. Inject dependencies
-3. Implement tool logic
-4. Register in MarketingService
-5. Add controller endpoint
-
-### Adding New Resources
-
-1. Create resource model
-2. Add to McpResourceProvider
-3. Use in tools
-
-### Custom AI Providers
-
-Implement custom ChatLanguageModel and configure in LlmConfiguration
-
-## Error Handling
-
-- Validation errors: HTTP 400 with details
-- Service errors: Logged and returned as HTTP 200 with error status
-- Uncaught exceptions: Global exception handler
-
-## Observability
-
-### Logging
-
-- Request ID in MDC for correlation
-- Structured JSON logs
-- Operation tracing with duration
-
-### Metrics
-
-- Execution time per operation
-- Success/failure rates
-- Resource usage
-
-### Tracing
-
-- Request lifecycle tracking
-- Tool execution spans
-- LLM call tracing
-
-## Security Considerations
-
-Current implementation:
-
-- No authentication (open API)
-- No rate limiting
-- Input validation only
-
-Future enhancements needed:
-
-- API key authentication
-- OAuth2/JWT support
-- Rate limiting
-- Input sanitization
-- Output encryption
-- Audit logging
-
-## Scalability
-
-Current limitations:
-
-- Single instance deployment
-- In-memory resource storage
-- Synchronous processing
-- No caching
-
-Future improvements:
-
-- Horizontal scaling with load balancer
-- Distributed caching (Redis)
-- Async processing with message queues
-- Database persistence
-- CDN for static outputs
-
-## Performance
-
-### Bottlenecks
-
-- LLM API calls (when enabled)
-- File I/O for output storage
-- JSON serialization
-
-### Optimization Strategies
-
-- Response caching
-- Parallel tool execution
-- Connection pooling
-- Batch operations
-
-## Testing Strategy
-
-- **Unit Tests**: Individual components
-- **Integration Tests**: API endpoints
-- **Contract Tests**: API contracts
-- **Load Tests**: Performance under load
-
-## Deployment Options
-
-1. **Standalone JAR**: `java -jar mcp-marketing-suite.jar`
-2. **Docker Container**: Containerized deployment
-3. **Kubernetes**: Cloud-native orchestration
-4. **Cloud Services**: AWS/GCP/Azure managed services
-
+Keeping these patterns ensures deterministic behavior and consistent integrations for every client.
